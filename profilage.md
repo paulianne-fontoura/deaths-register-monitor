@@ -59,4 +59,3 @@ Complétude par mois de survenue (triangle), délai déclaration/enregistrement,
 déduplication à la consolidation, tests d'intégrité (dates futures, dates partielles),
 
 couverture historique par fichier, réconciliation contre la série mensuelle Insee (BDM).
-
