@@ -20,3 +20,7 @@ class Settings(BaseModel):
     @property
     def manifest_path(self) -> Path:
         return self.data_dir / "manifest.jsonl"
+
+    @property
+    def warehouse_path(self) -> Path:
+        return self.data_dir / "warehouse.duckdb"

@@ -26,6 +26,15 @@ def seen(entries: list[dict], title: str, sha256: str) -> bool:
     return any(e.get("title") == title and e.get("sha256") == sha256 for e in entries)
 
 
+def latest(entries: list[dict], title: str) -> dict | None:
+    """Most recent entry for a title. The manifest is append-only, so last wins."""
+    found = None
+    for entry in entries:
+        if entry.get("title") == title:
+            found = entry
+    return found
+
+
 def next_version_path(raw_dir: Path, title: str) -> Path:
     """First free name: title, then title.v2, title.v3... Never overwrite (ADR-003)."""
     candidate = raw_dir / title
