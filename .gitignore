@@ -1,0 +1,14 @@
+# donnees nominatives - jamais versionnees
+data/
+*.duckdb
+
+# python
+__pycache__/
+.venv/
+*.egg-info/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# environnement
+.env
