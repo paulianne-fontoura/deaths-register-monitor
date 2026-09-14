@@ -1,11 +1,14 @@
 """deaths-register-monitor command line interface."""
 
 from datetime import UTC, datetime
+from pathlib import Path
+from typing import Annotated
 
 import httpx
 import typer
 
 from drm import download, manifest, registry, validate
+from drm import parse as parse_module
 from drm.config import RECORD_LENGTH, Settings
 
 app = typer.Typer(no_args_is_help=True, help="deaths-register-monitor - ingestion CLI")
@@ -71,3 +74,31 @@ def ingest(
         typer.echo(
             f"lines:    {stats['lines']} ({stats['bad_lines']} shorter than {RECORD_LENGTH} chars)"
         )
+
+
+@app.command()
+def parse(
+    raw_file: Annotated[
+        Path,
+        typer.Argument(help="A file from data/raw to parse into parquet.", exists=True),
+    ],
+) -> None:
+    """Parse one raw delivery into the parquet layer, quarantining bad lines."""
+    settings = Settings()
+    entries = manifest.load(settings.manifest_path)
+    file_hash = next(
+        (e["sha256"] for e in entries if e.get("path") == str(raw_file)),
+        "unknown",
+    )
+    parquet_path = settings.data_dir / "parquet" / f"{raw_file.name}.parquet"
+    quarantine_path = settings.data_dir / "quarantine" / f"{raw_file.name}.jsonl"
+    stats = parse_module.parse_file(raw_file, file_hash, parquet_path, quarantine_path)
+    typer.echo(f"rows:        {stats['rows']}")
+    typer.echo(f"quarantined: {stats['quarantined']}")
+    typer.echo(f"encoding:    {stats['encoding']}")
+    typer.echo(
+        f"sample:      {stats['sample_errors']} validation errors in the first 1000 rows"
+    )
+    typer.echo(f"parquet:     {parquet_path}")
+    if stats["quarantined"]:
+        typer.echo(f"quarantine:  {quarantine_path}")

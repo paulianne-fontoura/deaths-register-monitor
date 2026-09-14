@@ -27,3 +27,19 @@ par le fichier reel, dont les lignes font environ 198 caracteres avec des caract
 non significatifs en fin de ligne, conformes au NOTA du dessin Insee. Regle corrigee,
 
 test ajoute.
+
+
+
+\## 2026-09-14 - parsing vers parquet
+
+Parseur largeur fixe livre. Decoupe des 9 champs du dessin officiel, fallback
+
+Latin-1 documente, quarantaine des lignes courtes, colonnes techniques de
+
+tracabilite, validation pydantic d'un echantillon de 1000 lignes, ecriture
+
+parquet. Cinq tests sur fichiers d'exemple, dont ligne tronquee, encodage
+
+casse et date partielle. Fichier d'aout parse en reel, 50 450 lignes, zero
+
+quarantaine.
