@@ -28,6 +28,9 @@ def ingest(
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Resolve and show the plan, download nothing."
     ),
+    parse_after: bool = typer.Option(
+        False, "--parse", help="Parse the downloaded file into parquet right away."
+    ),
 ) -> None:
     """Download one delivery of the death register into the raw layer."""
     if source != "deaths":
@@ -74,6 +77,15 @@ def ingest(
         typer.echo(
             f"lines:    {stats['lines']} ({stats['bad_lines']} shorter than {RECORD_LENGTH} chars)"
         )
+        if parse_after:
+            parquet_path = settings.data_dir / "parquet" / f"{final_path.name}.parquet"
+            quarantine_path = (
+                settings.data_dir / "quarantine" / f"{final_path.name}.jsonl"
+            )
+            parse_stats = parse_module.parse_file(
+                final_path, sha256, parquet_path, quarantine_path
+            )
+            typer.echo(f"parquet:  {parquet_path} ({parse_stats['rows']} rows)")
 
 
 @app.command()
