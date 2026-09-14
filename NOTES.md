@@ -43,3 +43,11 @@ parquet. Cinq tests sur fichiers d'exemple, dont ligne tronquee, encodage
 casse et date partielle. Fichier d'aout parse en reel, 50 450 lignes, zero
 
 quarantaine.
+
+## 2026-09-14 - integration continue
+
+Workflow GitHub Actions livre, lint et tests sur chaque pull request et sur main,
+
+via le Makefile. Badge dans le README. Option --parse ajoutee a la commande ingest,
+
+make ingest telecharge et produit le parquet en une commande.

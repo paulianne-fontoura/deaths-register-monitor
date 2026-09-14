@@ -84,3 +84,16 @@ def test_republication_creates_new_version(httpx_mock, tmp_path, monkeypatch):
         (tmp_path / "data" / "manifest.jsonl").read_text().strip().splitlines()
     )
     assert len(manifest_lines) == 2
+
+
+def test_ingest_with_parse_writes_parquet(httpx_mock, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    httpx_mock.add_response(url=DATASET_API, json=DATASET_JSON)
+    httpx_mock.add_response(url=FILE_URL, content=CONTENT)
+
+    result = runner.invoke(app, ["ingest", "deaths", "--month", "2026-08", "--parse"])
+    assert result.exit_code == 0
+
+    parquet = tmp_path / "data" / "parquet" / "deces-2026-m08.txt.parquet"
+    assert parquet.exists()
+    assert "parquet:" in result.output
