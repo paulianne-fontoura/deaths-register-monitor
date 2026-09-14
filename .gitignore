@@ -12,3 +12,5 @@ dist/
 
 # environnement
 .env
+# outil local
+Claude outputs/
