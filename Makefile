@@ -1,5 +1,5 @@
 .RECIPEPREFIX := >
-.PHONY: setup lint test ingest
+.PHONY: setup lint test ingest backfill
 
 MONTH ?= 2026-08
 
@@ -15,3 +15,6 @@ test:
 
 ingest:
 > uv run drm ingest deaths --month $(MONTH) --parse
+
+backfill:
+> uv run drm backfill deaths

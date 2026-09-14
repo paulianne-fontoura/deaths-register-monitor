@@ -1,5 +1,6 @@
 """deaths-register-monitor command line interface."""
 
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
@@ -7,7 +8,7 @@ from typing import Annotated
 import httpx
 import typer
 
-from drm import download, manifest, registry, validate
+from drm import download, manifest, registry, validate, warehouse
 from drm import parse as parse_module
 from drm.config import RECORD_LENGTH, Settings
 
@@ -17,6 +18,55 @@ app = typer.Typer(no_args_is_help=True, help="deaths-register-monitor - ingestio
 @app.callback()
 def main() -> None:
     """Continuous quality audit of the French national death register."""
+
+
+def _download_resource(
+    client: httpx.Client, settings: Settings, resource: dict, period: str
+) -> tuple[Path, str, str, dict | None]:
+    """Fetch one resource into the raw layer (ADR-003).
+
+    Returns (raw_path, sha256, status, stats). Status 'unchanged' means this
+    exact content is already in the manifest and raw_path points at it;
+    'new' means a new version was written and recorded.
+    """
+    entries = manifest.load(settings.manifest_path)
+    temp_path, sha256, size = download.fetch_to_temp(
+        client, resource["url"], settings.raw_dir
+    )
+    if manifest.seen(entries, resource["title"], sha256):
+        temp_path.unlink()
+        existing = next(
+            entry
+            for entry in entries
+            if entry.get("title") == resource["title"] and entry.get("sha256") == sha256
+        )
+        return Path(existing["path"]), sha256, "unchanged", None
+    final_path = manifest.next_version_path(settings.raw_dir, resource["title"])
+    temp_path.replace(final_path)
+    stats = validate.check_fixed_width(final_path)
+    manifest.append(
+        settings.manifest_path,
+        {
+            "period": period,
+            "title": resource["title"],
+            "url": resource["url"],
+            "path": str(final_path),
+            "sha256": sha256,
+            "bytes": size,
+            "lines": stats["lines"],
+            "bad_lines": stats["bad_lines"],
+            "downloaded_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        },
+    )
+    return final_path, sha256, "new", {"bytes": size, **stats}
+
+
+def _parse_raw(settings: Settings, raw_path: Path, file_hash: str) -> tuple[Path, dict]:
+    """Parse one raw file into the parquet layer, quarantining bad lines."""
+    parquet_path = settings.data_dir / "parquet" / f"{raw_path.name}.parquet"
+    quarantine_path = settings.data_dir / "quarantine" / f"{raw_path.name}.jsonl"
+    stats = parse_module.parse_file(raw_path, file_hash, parquet_path, quarantine_path)
+    return parquet_path, stats
 
 
 @app.command()
@@ -31,10 +81,15 @@ def ingest(
     parse_after: bool = typer.Option(
         False, "--parse", help="Parse the downloaded file into parquet right away."
     ),
+    load_after: bool = typer.Option(
+        False, "--load", help="Load the parquet into the warehouse. Requires --parse."
+    ),
 ) -> None:
     """Download one delivery of the death register into the raw layer."""
     if source != "deaths":
         raise typer.BadParameter("only 'deaths' is supported")
+    if load_after and not parse_after:
+        raise typer.BadParameter("--load requires --parse")
     settings = Settings()
     with httpx.Client() as client:
         resource = registry.resolve(client, month)
@@ -44,48 +99,99 @@ def ingest(
             typer.echo("dry-run:  nothing downloaded")
             return
 
-        entries = manifest.load(settings.manifest_path)
-        temp_path, sha256, size = download.fetch_to_temp(
-            client, resource["url"], settings.raw_dir
+        raw_path, sha256, status, stats = _download_resource(
+            client, settings, resource, month
         )
-        if manifest.seen(entries, resource["title"], sha256):
-            temp_path.unlink()
+        if status == "unchanged":
             typer.echo(
                 f"unchanged: sha256 {sha256[:12]}... already in the manifest, nothing to do"
             )
             return
-
-        final_path = manifest.next_version_path(settings.raw_dir, resource["title"])
-        temp_path.replace(final_path)
-        stats = validate.check_fixed_width(final_path)
-        manifest.append(
-            settings.manifest_path,
-            {
-                "period": month,
-                "title": resource["title"],
-                "url": resource["url"],
-                "path": str(final_path),
-                "sha256": sha256,
-                "bytes": size,
-                "lines": stats["lines"],
-                "bad_lines": stats["bad_lines"],
-                "downloaded_at": datetime.now(UTC).isoformat(timespec="seconds"),
-            },
-        )
-        typer.echo(f"saved:    {final_path} ({size} bytes)")
+        typer.echo(f"saved:    {raw_path} ({stats['bytes']} bytes)")
         typer.echo(f"sha256:   {sha256}")
         typer.echo(
             f"lines:    {stats['lines']} ({stats['bad_lines']} shorter than {RECORD_LENGTH} chars)"
         )
         if parse_after:
-            parquet_path = settings.data_dir / "parquet" / f"{final_path.name}.parquet"
-            quarantine_path = (
-                settings.data_dir / "quarantine" / f"{final_path.name}.jsonl"
-            )
-            parse_stats = parse_module.parse_file(
-                final_path, sha256, parquet_path, quarantine_path
-            )
+            parquet_path, parse_stats = _parse_raw(settings, raw_path, sha256)
             typer.echo(f"parquet:  {parquet_path} ({parse_stats['rows']} rows)")
+            if load_after:
+                con = warehouse.connect(settings.warehouse_path)
+                load_stats = warehouse.load_raw(con, parquet_path, sha256)
+                typer.echo(f"loaded:   {load_stats['inserted']} new rows in raw_deces")
+
+
+@app.command()
+def backfill(
+    source: str = typer.Argument(help="Data source. Only 'deaths' is supported."),
+    from_year: int = typer.Option(1970, "--from", help="First year to load."),
+    to_year: int = typer.Option(2026, "--to", help="Last year to load."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show the plan, download and load nothing."
+    ),
+) -> None:
+    """Load the register history into the warehouse, one file at a time.
+
+    Annual files take precedence over monthly increments (ADR-004). A file
+    already in the manifest is not downloaded again and a file already in
+    the warehouse is not loaded again, so an interrupted run just resumes.
+    """
+    if source != "deaths":
+        raise typer.BadParameter("only 'deaths' is supported")
+    if from_year > to_year:
+        raise typer.BadParameter("--from must not be after --to")
+    settings = Settings()
+    started = time.perf_counter()
+    with httpx.Client() as client:
+        dataset = registry.fetch_dataset(client)
+        plan = registry.backfill_resources(dataset, from_year, to_year)
+        typer.echo(f"plan: {len(plan)} files ({from_year}-{to_year})")
+        if dry_run:
+            entries = manifest.load(settings.manifest_path)
+            for resource in plan:
+                known = manifest.latest(entries, resource["title"])
+                state = "in manifest" if known else "to download"
+                typer.echo(f"  {resource['title']}  [{state}]")
+            typer.echo("dry-run: nothing downloaded")
+            return
+
+        con = warehouse.connect(settings.warehouse_path)
+        failures: list[str] = []
+        for index, resource in enumerate(plan, start=1):
+            prefix = f"[{index}/{len(plan)}] {resource['title']}"
+            try:
+                entries = manifest.load(settings.manifest_path)
+                known = manifest.latest(entries, resource["title"])
+                if known and Path(known["path"]).exists():
+                    raw_path, sha256 = Path(known["path"]), known["sha256"]
+                    origin = "manifest"
+                else:
+                    period = registry.title_to_period(resource["title"])
+                    raw_path, sha256, _, _ = _download_resource(
+                        client, settings, resource, period
+                    )
+                    origin = "downloaded"
+                if warehouse.is_loaded(con, sha256):
+                    typer.echo(f"{prefix}: already loaded")
+                    continue
+                parquet_path = (
+                    settings.data_dir / "parquet" / f"{raw_path.name}.parquet"
+                )
+                if not parquet_path.exists():
+                    parquet_path, _ = _parse_raw(settings, raw_path, sha256)
+                load_stats = warehouse.load_raw(con, parquet_path, sha256)
+                typer.echo(
+                    f"{prefix}: {origin}, "
+                    f"{load_stats['inserted']} rows in {load_stats['seconds']}s"
+                )
+            except Exception as error:  # noqa: BLE001 - one file must not stop the run
+                failures.append(resource["title"])
+                typer.echo(f"{prefix}: FAILED ({error})")
+        typer.echo(f"warehouse: {warehouse.count_rows(con)} rows")
+        typer.echo(f"elapsed:   {round(time.perf_counter() - started)}s")
+        if failures:
+            typer.echo(f"failed:    {', '.join(failures)}")
+            raise typer.Exit(code=1)
 
 
 @app.command()
@@ -102,9 +208,7 @@ def parse(
         (e["sha256"] for e in entries if e.get("path") == str(raw_file)),
         "unknown",
     )
-    parquet_path = settings.data_dir / "parquet" / f"{raw_file.name}.parquet"
-    quarantine_path = settings.data_dir / "quarantine" / f"{raw_file.name}.jsonl"
-    stats = parse_module.parse_file(raw_file, file_hash, parquet_path, quarantine_path)
+    parquet_path, stats = _parse_raw(settings, raw_file, file_hash)
     typer.echo(f"rows:        {stats['rows']}")
     typer.echo(f"quarantined: {stats['quarantined']}")
     typer.echo(f"encoding:    {stats['encoding']}")
@@ -113,4 +217,5 @@ def parse(
     )
     typer.echo(f"parquet:     {parquet_path}")
     if stats["quarantined"]:
+        quarantine_path = settings.data_dir / "quarantine" / f"{raw_file.name}.jsonl"
         typer.echo(f"quarantine:  {quarantine_path}")

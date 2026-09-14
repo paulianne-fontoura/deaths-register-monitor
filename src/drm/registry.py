@@ -5,10 +5,15 @@ Resource ids change when files are republished, so we resolve by title at run ti
 instead of hardcoding urls.
 """
 
+import re
+
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from drm.config import DATASET_API
+
+ANNUAL_RE = re.compile(r"^deces-(\d{4})\.txt$")
+MONTHLY_RE = re.compile(r"^deces-(\d{4})-m(\d{2})\.txt$")
 
 
 class ResourceNotFoundError(Exception):
@@ -32,6 +37,41 @@ def fetch_dataset(client: httpx.Client) -> dict:
     response = client.get(DATASET_API, timeout=30)
     response.raise_for_status()
     return response.json()
+
+
+def title_to_period(title: str) -> str:
+    """Inverse of period_to_title, for manifest entries written by backfill."""
+    if match := MONTHLY_RE.match(title):
+        return f"{match.group(1)}-{match.group(2)}"
+    if match := ANNUAL_RE.match(title):
+        return match.group(1)
+    return title
+
+
+def backfill_resources(dataset: dict, from_year: int, to_year: int) -> list[dict]:
+    """Ordered download plan for the whole history (ADR-004).
+
+    A year covered by an annual file uses it alone; a year without one (the
+    current year) falls back to its monthly increments. Quarterly files and
+    unrelated resources never match the patterns, so they are excluded.
+    """
+    annual: dict[int, dict] = {}
+    monthly: dict[int, list[dict]] = {}
+    for resource in dataset.get("resources", []):
+        title = resource.get("title", "")
+        if match := ANNUAL_RE.match(title):
+            annual[int(match.group(1))] = {"title": title, "url": resource["url"]}
+        elif match := MONTHLY_RE.match(title):
+            monthly.setdefault(int(match.group(1)), []).append(
+                {"title": title, "url": resource["url"]}
+            )
+    plan: list[dict] = []
+    for year in range(from_year, to_year + 1):
+        if year in annual:
+            plan.append(annual[year])
+        else:
+            plan.extend(sorted(monthly.get(year, []), key=lambda r: r["title"]))
+    return plan
 
 
 def resolve(client: httpx.Client, period: str) -> dict:
