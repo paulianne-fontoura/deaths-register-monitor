@@ -1,0 +1,13 @@
+name: drm
+version: "0.1.0"
+profile: drm
+
+model-paths: ["models"]
+target-path: target
+clean-targets: [target, dbt_packages]
+
+models:
+  drm:
+    staging:
+      +materialized: view
+      +schema: staging

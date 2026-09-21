@@ -12,3 +12,5 @@
 - DuckDB warehouse: idempotent raw layer keyed on (_file_hash, _row_hash), load log.
 - Backfill command covering 1970 to today, resumable, annual over monthly (ADR-004).
 - --load option on ingest, chaining download, parse and warehouse load.
+- dbt staging layer: sources with freshness, typed staging views, generic tests,
+  sqlfluff lint, CI build on a committed synthetic fixture.

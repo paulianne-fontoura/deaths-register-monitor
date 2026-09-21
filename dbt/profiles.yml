@@ -1,0 +1,20 @@
+# Three targets (project plan, step 7): dev on the local warehouse,
+# ci on a synthetic fixture warehouse, bq activated later (base step 13).
+drm:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DRM_DB_PATH', 'data/warehouse.duckdb') }}"
+      threads: 4
+    ci:
+      type: duckdb
+      path: data/ci_warehouse.duckdb
+      threads: 4
+    bq:
+      # Placeholder until the BigQuery sandbox step; needs dbt-bigquery.
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('DBT_BQ_PROJECT', 'unset') }}"
+      dataset: drm
+      threads: 4
