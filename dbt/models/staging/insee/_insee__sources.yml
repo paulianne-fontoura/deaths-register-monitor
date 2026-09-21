@@ -1,0 +1,25 @@
+version: 2
+
+sources:
+  - name: insee
+    description: >
+      Raw layer of the death register pipeline. Tables are written by the drm
+      CLI (ingest, backfill) into the local DuckDB warehouse and are never
+      modified afterwards.
+    schema: main
+    tables:
+      - name: raw_deces
+        description: >
+          Every row of every ingested delivery of the INSEE death register,
+          exactly as published. Duplicate rows are kept on purpose (ADR-005);
+          each file version is a distinct snapshot (ADR-003).
+        loaded_at_field: "cast(_ingested_at as timestamp)"
+        freshness:
+          warn_after: {count: 40, period: day}
+          error_after: {count: 75, period: day}
+      - name: load_log
+        description: One line per file loaded into the warehouse, with volumes and timing.
+        loaded_at_field: "cast(loaded_at as timestamp)"
+        freshness:
+          warn_after: {count: 40, period: day}
+          error_after: {count: 75, period: day}

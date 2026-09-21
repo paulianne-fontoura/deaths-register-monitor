@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: stg_insee__deces
+    description: >
+      Staging of the raw register. One output row per physical line of every
+      ingested file version. Codes and raw dates are kept as published; typed
+      dates are null when the published value is partial or invalid.
+    columns:
+      - name: record_id
+        description: file_hash + line number, unique by construction.
+        data_tests:
+          - unique
+          - not_null
+      - name: row_hash
+        data_tests:
+          - not_null
+      - name: file_hash
+        data_tests:
+          - not_null
+      - name: full_name
+        data_tests:
+          - not_null
+      - name: death_date_raw
+        data_tests:
+          - not_null
+      - name: sex_code
+        description: >
+          '1' or '2' in the record layout. Real deliveries contain defects;
+          the test warns instead of failing so defects are visible, measured,
+          and never silently dropped.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['1', '2']
+              config:
+                severity: warn
+
+  - name: stg_insee__load_log
+    columns:
+      - name: file_hash
+        data_tests:
+          - unique
+          - not_null
+      - name: rows_inserted
+        data_tests:
+          - not_null

@@ -1,0 +1,11 @@
+FIXTURE*ALICE/                                                                  21934011575056PARIS                                                       2026080375056101      XXXXXXXXXXXXXXXXXXXXXX
+FIXTURE*BERNARD/                                                                11941023013055MARSEILLE                                                   2026080513055102      XXXXXXXXXXXXXXXXXXXXXX
+FIXTURE*CHLOE/                                                                  21952070030189NIMES                                                       2026080730189103      XXXXXXXXXXXXXXXXXXXXXX
+FIXTURE*DAVID/                                                                  11960041899139LISBOA                        PORTUGAL                      2026081069123104      XXXXXXXXXXXXXXXXXXXXXX
+FIXTURE*EMILE/                                                                  11928092176540ROUEN                                                       2026081276540105      XXXXXXXXXXXXXXXXXXXXXX
+FIXTURE*FANNY/                                                                  21947050631555TOULOUSE                                                    2026081531555106      XXXXXXXXXXXXXXXXXXXXXX
+FIXTURE*GILLES/                                                                 11939111159350LILLE                                                       2026081859350107      XXXXXXXXXXXXXXXXXXXXXX
+FIXTURE*GILLES/                                                                 11939111159350LILLE                                                       2026081859350107      XXXXXXXXXXXXXXXXXXXXXX
+FIXTURE*HELENE/                                                                 31955062444109NANTES                                                      2026082144109108      XXXXXXXXXXXXXXXXXXXXXX
+FIXTURE*IRENE/                                                                  21963081267482STRASBOURG                                                  2026082567482109      XXXXXXXXXXXXXXXXXXXXXX
+LIGNE TROP COURTE POUR LE DESSIN
