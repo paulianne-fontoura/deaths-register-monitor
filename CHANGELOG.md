@@ -18,3 +18,5 @@
   (communes since 1943, overseas included) and dim_pays, synthetic CI fixtures.
 - Duplicate rules (ADR-007): name normalization macro, person keys, qa_doublons
   measurement table rebuilt on every dbt build.
+- Geographic resolution QA: qa_geo_orphelins diagnosis mart, geo_exceptions
+  seed and a singular test failing on any undocumented unresolved place code.
