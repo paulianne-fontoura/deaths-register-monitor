@@ -14,3 +14,5 @@
 - --load option on ingest, chaining download, parse and warehouse load.
 - dbt staging layer: sources with freshness, typed staging views, generic tests,
   sqlfluff lint, CI build on a committed synthetic fixture.
+- COG referentials: drm cog download with manifest history, versioned dim_geo
+  (communes since 1943, overseas included) and dim_pays, synthetic CI fixtures.

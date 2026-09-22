@@ -8,6 +8,7 @@ from typing import Annotated
 import httpx
 import typer
 
+from drm import cog as cog_module
 from drm import download, manifest, registry, validate, warehouse
 from drm import parse as parse_module
 from drm.config import RECORD_LENGTH, Settings
@@ -192,6 +193,26 @@ def backfill(
         if failures:
             typer.echo(f"failed:    {', '.join(failures)}")
             raise typer.Exit(code=1)
+
+
+@app.command()
+def cog(
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="List the files, download nothing."
+    ),
+) -> None:
+    """Download the geographic referentials (COG) into the reference layer."""
+    settings = Settings()
+    if dry_run:
+        for name in cog_module.COG_FILES:
+            typer.echo(f"  {name}")
+        typer.echo("dry-run: nothing downloaded")
+        return
+    with httpx.Client() as client:
+        results = cog_module.download_cog(client, settings)
+    for name, status in results:
+        typer.echo(f"{name}: {status}")
+    typer.echo(f"reference: {settings.cog_dir}")
 
 
 @app.command()
