@@ -16,3 +16,5 @@
   sqlfluff lint, CI build on a committed synthetic fixture.
 - COG referentials: drm cog download with manifest history, versioned dim_geo
   (communes since 1943, overseas included) and dim_pays, synthetic CI fixtures.
+- Duplicate rules (ADR-007): name normalization macro, person keys, qa_doublons
+  measurement table rebuilt on every dbt build.
