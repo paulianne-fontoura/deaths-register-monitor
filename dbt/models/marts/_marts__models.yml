@@ -34,3 +34,26 @@ models:
       - name: country_code
         data_tests:
           - not_null
+
+  - name: qa_geo_orphelins
+    description: >
+      Death place codes that do not resolve in dim_geo or dim_pays at the
+      event date (pre-1943 events use the earliest known state). One row
+      per code with a diagnosis: blank code, known to the referential but
+      used outside its validity window, or never published by the COG.
+      Documented exceptions live in the geo_exceptions seed.
+    columns:
+      - name: place_code
+        data_tests:
+          - unique
+          - not_null
+      - name: statut
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - 'code_absent'
+                  - 'commune_hors_validite'
+                  - 'pays_hors_validite'
+                  - 'hors_referentiel'

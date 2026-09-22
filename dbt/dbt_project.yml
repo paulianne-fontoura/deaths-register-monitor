@@ -14,3 +14,11 @@ models:
     intermediate:
       +materialized: view
       +schema: intermediate
+
+seeds:
+  drm:
+    geo_exceptions:
+      # varchar keeps the leading zeros ('00000' must not become 0)
+      +column_types:
+        code_pattern: varchar
+        motif: varchar

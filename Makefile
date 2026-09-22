@@ -10,7 +10,7 @@ setup:
 lint:
 > uv run ruff check .
 > uv run ruff format --check .
-> uv run sqlfluff lint dbt/models
+> uv run sqlfluff lint dbt/models dbt/tests
 
 test:
 > uv run pytest
