@@ -1,5 +1,5 @@
 .RECIPEPREFIX := >
-.PHONY: setup lint test ingest backfill dbt-build dbt-run dbt-test freshness dbt-ci
+.PHONY: setup lint test ingest backfill cog dbt-build dbt-run dbt-test freshness dbt-ci
 
 MONTH ?= 2026-08
 DBT_ARGS = --project-dir dbt --profiles-dir dbt
@@ -20,6 +20,9 @@ ingest:
 
 backfill:
 > uv run drm backfill deaths
+
+cog:
+> uv run drm cog
 
 dbt-build:
 > uv run dbt build $(DBT_ARGS)

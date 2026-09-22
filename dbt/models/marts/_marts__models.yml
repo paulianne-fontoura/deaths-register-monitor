@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: dim_geo
+    description: >
+      Versioned geographic dimension. One row per place code and validity
+      period since 1943, as published by the INSEE. A place code of the
+      register resolves here at the event date; events before 1943 use the
+      earliest known state (rule in docs/le-registre.md).
+    columns:
+      - name: geo_version_id
+        data_tests:
+          - unique
+          - not_null
+      - name: commune_code
+        data_tests:
+          - not_null
+      - name: valid_from
+        data_tests:
+          - not_null
+      - name: scope
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['metropole_dom', 'outremer_historique']
+
+  - name: dim_pays
+    description: Versioned country dimension from the COG countries file.
+    columns:
+      - name: pays_version_id
+        data_tests:
+          - unique
+          - not_null
+      - name: country_code
+        data_tests:
+          - not_null
