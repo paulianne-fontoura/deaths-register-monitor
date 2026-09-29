@@ -26,3 +26,6 @@
 - Version corpus: backfill --all-deliveries keeps the monthly overlaps,
   is_base flag on deliveries, fct_record_versions (late arrivals and
   corrections) under an enforced contract.
+- Completeness triangle (fct_completeness_triangle) and monthly quality
+  (fct_monthly_quality) under enforced contracts, with a bound-proving
+  singular test.
