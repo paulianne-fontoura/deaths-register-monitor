@@ -162,6 +162,87 @@ models:
         constraints:
           - type: not_null
 
+  - name: fct_completeness_triangle
+    description: >
+      One row per death month and per knowledge point (distinct data.gouv
+      upload date): how many deaths of that month the public register held
+      at that date, and the share of the current total. The table the
+      project exists for.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: triangle_id
+        data_type: varchar
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+      - name: mois_deces
+        data_type: date
+        constraints:
+          - type: not_null
+      - name: published_at
+        data_type: date
+        constraints:
+          - type: not_null
+      - name: delai_mois
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: n_connus
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: n_total_courant
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: part_connue
+        data_type: double
+        constraints:
+          - type: not_null
+
+  - name: fct_monthly_quality
+    description: >
+      Register quality by death month: canonical death count, median delay
+      to first publication, deaths known within 30 and 90 days, collapsed
+      duplicate rows and silently corrected deaths.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: mois_deces
+        data_type: date
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+      - name: n_deces
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: delai_median_jours
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: n_connus_30_jours
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: n_connus_90_jours
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: n_lignes_repliees
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: n_deces_corriges
+        data_type: bigint
+        constraints:
+          - type: not_null
+
   - name: qa_geo_orphelins
     description: >
       Death place codes that do not resolve in dim_geo or dim_pays at the
