@@ -45,3 +45,19 @@ models:
       - name: rows_inserted
         data_tests:
           - not_null
+
+  - name: stg_insee__manifest
+    description: >
+      Register deliveries with their period and the data.gouv upload date
+      extracted from the versioned url (knowledge axis, ADR-008).
+    columns:
+      - name: file_hash
+        data_tests:
+          - unique
+          - not_null
+      - name: period
+        data_tests:
+          - not_null
+      - name: published_at
+        data_tests:
+          - not_null

@@ -20,3 +20,6 @@
   measurement table rebuilt on every dbt build.
 - Geographic resolution QA: qa_geo_orphelins diagnosis mart, geo_exceptions
   seed and a singular test failing on any undocumented unresolved place code.
+- Bitemporal marts (ADR-008): fct_death_records under an enforced contract,
+  two-level canonical grain, real knowledge axis from the manifest urls,
+  measured-threshold singular tests.

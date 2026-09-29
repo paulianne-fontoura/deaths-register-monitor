@@ -22,7 +22,7 @@ with deces as (
 
 ),
 
-deces_par_code as (
+deces_par_paire as (
 
     select
         place_code,
@@ -34,67 +34,20 @@ deces_par_code as (
 
 ),
 
-geo_valide as (
+non_resolues as (
 
     select
-        commune_code,
-        valid_from,
-        coalesce(valid_to, date '9999-12-31') as valid_to
-    from {{ ref('dim_geo') }}
-
-),
-
-pays_valide as (
-
-    select
-        country_code,
-        valid_from,
-        coalesce(valid_to, date '9999-12-31') as valid_to
-    from {{ ref('dim_pays') }}
-
-),
-
-resolution as (
-
-    -- adjacent validity intervals share their boundary date, so a code can
-    -- match twice: aggregated to one flag per (code, date) group
-    select
-        deces_par_code.place_code,
-        deces_par_code.ref_date,
-        deces_par_code.date_absente,
-        deces_par_code.n_deces,
-        max(case when geo_valide.commune_code is not null then 1 else 0 end)
-            as geo_ok,
-        max(case when pays_valide.country_code is not null then 1 else 0 end)
-            as pays_ok
-    from deces_par_code
-    left join geo_valide
+        deces_par_paire.place_code,
+        deces_par_paire.ref_date,
+        deces_par_paire.date_absente,
+        deces_par_paire.n_deces,
+        resolution.statut as statut_resolution
+    from deces_par_paire
+    inner join {{ ref('int_lieux__resolution') }} as resolution
         on
-            deces_par_code.place_code = geo_valide.commune_code
-            and deces_par_code.ref_date >= geo_valide.valid_from
-            and deces_par_code.ref_date <= geo_valide.valid_to
-    left join pays_valide
-        on
-            deces_par_code.place_code = pays_valide.country_code
-            and deces_par_code.ref_date >= pays_valide.valid_from
-            and deces_par_code.ref_date <= pays_valide.valid_to
-    group by
-        deces_par_code.place_code,
-        deces_par_code.ref_date,
-        deces_par_code.date_absente,
-        deces_par_code.n_deces
-
-),
-
-orphelins as (
-
-    select
-        place_code,
-        ref_date,
-        date_absente,
-        n_deces
-    from resolution
-    where geo_ok = 0 and pays_ok = 0
+            deces_par_paire.place_code = resolution.place_code
+            and deces_par_paire.ref_date = resolution.ref_date
+    where resolution.statut in ('orphelin', 'code_absent')
 
 ),
 
@@ -121,9 +74,10 @@ codes_pays as (
 final as (
 
     select
-        orphelins.place_code,
+        non_resolues.place_code,
         case
-            when coalesce(orphelins.place_code, '') = '' then 'code_absent'
+            when non_resolues.statut_resolution = 'code_absent'
+                then 'code_absent'
             when codes_geo.commune_code is not null
                 then 'commune_hors_validite'
             when codes_pays.country_code is not null
@@ -131,17 +85,18 @@ final as (
             else 'hors_referentiel'
         end as statut,
         coalesce(codes_geo.libelle, codes_pays.libelle) as libelle_connu,
-        sum(orphelins.n_deces) as n_deces,
-        min(orphelins.ref_date) as premiere_date_ref,
-        max(orphelins.ref_date) as derniere_date_ref,
-        bool_or(orphelins.date_absente) as date_absente
-    from orphelins
+        sum(non_resolues.n_deces) as n_deces,
+        min(non_resolues.ref_date) as premiere_date_ref,
+        max(non_resolues.ref_date) as derniere_date_ref,
+        bool_or(non_resolues.date_absente) as date_absente
+    from non_resolues
     left join codes_geo
-        on orphelins.place_code = codes_geo.commune_code
+        on non_resolues.place_code = codes_geo.commune_code
     left join codes_pays
-        on orphelins.place_code = codes_pays.country_code
+        on non_resolues.place_code = codes_pays.country_code
     group by
-        orphelins.place_code,
+        non_resolues.place_code,
+        non_resolues.statut_resolution,
         codes_geo.commune_code,
         codes_pays.country_code,
         codes_geo.libelle,
