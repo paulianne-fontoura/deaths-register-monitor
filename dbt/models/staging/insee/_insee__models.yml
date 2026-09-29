@@ -61,3 +61,11 @@ models:
       - name: published_at
         data_tests:
           - not_null
+      - name: delivery_kind
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['annual', 'monthly']
+      - name: is_base
+        data_tests:
+          - not_null

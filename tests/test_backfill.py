@@ -124,3 +124,22 @@ def test_one_failure_does_not_stop_the_others(httpx_mock, tmp_path, monkeypatch)
     assert "failed:    deces-1970.txt" in result.output
     con = warehouse.connect(Settings().warehouse_path)
     assert warehouse.count_rows(con) == 4  # 1971 and 2026-m01 still loaded
+
+
+def test_all_deliveries_plans_monthly_overlaps(httpx_mock, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    dataset = {
+        "resources": [
+            {"title": "deces-1970.txt", "url": URL_1970},
+            {"title": "deces-1970-m01.txt", "url": "https://example.org/m01-1970.txt"},
+        ]
+    }
+    httpx_mock.add_response(url=DATASET_API, json=dataset)
+
+    result = runner.invoke(app, ["backfill", "deaths", "--dry-run", "--all-deliveries"])
+
+    assert result.exit_code == 0
+    assert "plan: 2 files" in result.output
+    assert result.output.index("deces-1970.txt") < result.output.index(
+        "deces-1970-m01.txt"
+    )

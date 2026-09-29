@@ -13,12 +13,19 @@
 
 with deces as (
 
+    -- base corpus only (is_base): the version corpus republishes the same
+    -- deaths on purpose and would double-count them here
     select
-        death_place_code as place_code,
-        greatest(coalesce(death_date, date '1943-01-01'), date '1943-01-01')
-            as ref_date,
-        death_date is null as date_absente
-    from {{ ref('stg_insee__deces') }}
+        stg_deces.death_place_code as place_code,
+        greatest(
+            coalesce(stg_deces.death_date, date '1943-01-01'),
+            date '1943-01-01'
+        ) as ref_date,
+        stg_deces.death_date is null as date_absente
+    from {{ ref('stg_insee__deces') }} as stg_deces
+    inner join {{ ref('stg_insee__manifest') }} as livraisons
+        on stg_deces.file_hash = livraisons.file_hash
+    where livraisons.is_base
 
 ),
 

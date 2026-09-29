@@ -113,6 +113,55 @@ models:
         constraints:
           - type: not_null
 
+  - name: fct_record_versions
+    description: >
+      One row per physical register row, tied to its deduplicated death
+      and its delivery (ADR-008). The bitemporal table: late arrivals and
+      corrections are read from the deliveries that overlap, loaded with
+      drm backfill deaths --all-deliveries.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: death_id
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: record_id
+        data_type: varchar
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+      - name: file_hash
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: row_hash
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: period
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: published_at
+        data_type: date
+        constraints:
+          - type: not_null
+      - name: version_rank
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: is_current
+        data_type: boolean
+        constraints:
+          - type: not_null
+      - name: has_corrections
+        data_type: boolean
+        constraints:
+          - type: not_null
+
   - name: qa_geo_orphelins
     description: >
       Death place codes that do not resolve in dim_geo or dim_pays at the
