@@ -23,3 +23,6 @@
 - Bitemporal marts (ADR-008): fct_death_records under an enforced contract,
   two-level canonical grain, real knowledge axis from the manifest urls,
   measured-threshold singular tests.
+- Version corpus: backfill --all-deliveries keeps the monthly overlaps,
+  is_base flag on deliveries, fct_record_versions (late arrivals and
+  corrections) under an enforced contract.

@@ -1,13 +1,19 @@
--- Duplicate measurement of the consolidated register (ADR-007). Loaded
--- snapshots do not overlap in period (annual 1970-2025, monthly 2026), so
--- every group counted here is a real anomaly of the published register,
--- never an artefact of the loading strategy. Count and flag, never merge.
+-- Duplicate measurement of the consolidated register (ADR-007), on the
+-- base corpus only (is_base, ADR-004 precedence): those deliveries do not
+-- overlap in period, so every group counted here is a real anomaly of the
+-- published register, never an artefact of the loading strategy. The
+-- version corpus overlaps on purpose and is read by fct_record_versions.
+-- Count and flag, never merge.
 
 {{ config(materialized='table') }}
 
 with keys as (
 
-    select * from {{ ref('int_deces__person_keys') }}
+    select person_keys.*
+    from {{ ref('int_deces__person_keys') }} as person_keys
+    inner join {{ ref('stg_insee__manifest') }} as livraisons
+        on person_keys.file_hash = livraisons.file_hash
+    where livraisons.is_base
 
 ),
 

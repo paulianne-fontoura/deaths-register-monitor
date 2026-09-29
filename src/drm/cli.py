@@ -130,12 +130,20 @@ def backfill(
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Show the plan, download and load nothing."
     ),
+    all_deliveries: bool = typer.Option(
+        False,
+        "--all-deliveries",
+        help="Version corpus (ADR-008): every delivery, monthly overlaps included.",
+    ),
 ) -> None:
     """Load the register history into the warehouse, one file at a time.
 
-    Annual files take precedence over monthly increments (ADR-004). A file
-    already in the manifest is not downloaded again and a file already in
-    the warehouse is not loaded again, so an interrupted run just resumes.
+    By default annual files take precedence over monthly increments
+    (ADR-004, base corpus). With --all-deliveries the monthly increments of
+    covered years are loaded too (ADR-008, version corpus): the overlaps
+    feed fct_record_versions. A file already in the manifest is not
+    downloaded again and a file already in the warehouse is not loaded
+    again, so an interrupted run just resumes.
     """
     if source != "deaths":
         raise typer.BadParameter("only 'deaths' is supported")
@@ -145,7 +153,11 @@ def backfill(
     started = time.perf_counter()
     with httpx.Client() as client:
         dataset = registry.fetch_dataset(client)
-        plan = registry.backfill_resources(dataset, from_year, to_year)
+        plan = (
+            registry.version_resources(dataset, from_year, to_year)
+            if all_deliveries
+            else registry.backfill_resources(dataset, from_year, to_year)
+        )
         typer.echo(f"plan: {len(plan)} files ({from_year}-{to_year})")
         if dry_run:
             entries = manifest.load(settings.manifest_path)

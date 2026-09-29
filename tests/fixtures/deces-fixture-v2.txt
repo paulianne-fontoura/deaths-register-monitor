@@ -1,0 +1,4 @@
+FIXTURE*ALICE/                                                                  21934011575056PARIS                                                       2026080375056101      XXXXXXXXXXXXXXXXXXXXXX
+FIXTURE*BERNARD/                                                                11941023013055MARSEILLE                                                   2026080513055102      XXXXXXXXXXXXXXXXXXXXXX
+FIXTURE*DAVID/                                                                  11960041899139LISBOA                        PORTUGAL                      2026081030189104      XXXXXXXXXXXXXXXXXXXXXX
+FIXTURE*GISELE/                                                                 21929030531555TOULOUSE                                                    2026090131555201      XXXXXXXXXXXXXXXXXXXXXX

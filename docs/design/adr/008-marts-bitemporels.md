@@ -80,6 +80,31 @@ naissance subsistent sous le seuil de 70 (une paire du stock mesuré
 dans le référentiel versionné et 99,6 % des enregistrements portent
 deux dates complètes.
 
+Complément du 29 septembre 2026, corpus des versions chargé - data.gouv
+ne conserve les livraisons mensuelles que jusqu'à la consolidation
+annuelle, la fenêtre bitemporelle reconstituable commence donc en
+octobre 2024 (15 mensuels ajoutés, 830 474 lignes) et n'existe vers le
+passé que parce que les instantanés ont été capturés - c'est l'argument
+du monitoring continu. Sur cette fenêtre, fct_record_versions trace
+30 190 414 lignes pour 29 133 843 décès, dont 1 056 571 versions
+anciennes et 97 796 décès au contenu modifié entre la livraison
+mensuelle et la consolidation annuelle. Aucun décès nouveau n'apparaît
+dans les mensuels recouverts, et les mesures de qualité du corpus de
+base sont invariantes au chiffre près.
+
+## Décision 6 - deux corpus, une seule table brute
+
+Le corpus de base suit la préséance annuelle d'ADR-004 et porte toutes
+les mesures de qualité publiées (qa_doublons, qa_geo_orphelins). Le
+corpus des versions y ajoute les livraisons mensuelles des années déjà
+couvertes par un fichier annuel - c'est lui qui donne son contenu à
+fct_record_versions, les recouvrements y sont le signal et non un
+défaut. Les deux vivent dans la même table brute (ADR-005) : le staging
+du manifest classe chaque livraison (delivery_kind, is_base) et chaque
+modèle choisit son corpus, aucune ligne n'est dupliquée ni supprimée.
+Le chargement passe par drm backfill deaths --all-deliveries ; les
+fichiers trimestriels restent exclus (ADR-004).
+
 ## Conséquences
 
 fct_death_records repose sur trois intermédiaires - les clés d'ADR-007,

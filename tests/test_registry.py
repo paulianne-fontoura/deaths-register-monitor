@@ -36,6 +36,23 @@ def test_backfill_resources_prefers_annual_and_skips_quarterly():
     ]
 
 
+def test_version_resources_keeps_monthly_overlaps():
+    dataset = {
+        "resources": [
+            {"title": "deces-2025.txt", "url": "u-2025"},
+            {"title": "deces-2025-m03.txt", "url": "u-2025-m03"},
+            {"title": "deces-2026-m01.txt", "url": "u-m01"},
+            {"title": "deces-2026-t1.txt", "url": "u-t1"},
+        ]
+    }
+    plan = registry.version_resources(dataset, 2025, 2026)
+    assert [r["title"] for r in plan] == [
+        "deces-2025.txt",  # annual AND its monthly overlap (ADR-008)
+        "deces-2025-m03.txt",
+        "deces-2026-m01.txt",  # quarterly still excluded
+    ]
+
+
 def test_resolve_finds_resource(httpx_mock):
     httpx_mock.add_response(
         url=DATASET_API,

@@ -48,13 +48,10 @@ def title_to_period(title: str) -> str:
     return title
 
 
-def backfill_resources(dataset: dict, from_year: int, to_year: int) -> list[dict]:
-    """Ordered download plan for the whole history (ADR-004).
-
-    A year covered by an annual file uses it alone; a year without one (the
-    current year) falls back to its monthly increments. Quarterly files and
-    unrelated resources never match the patterns, so they are excluded.
-    """
+def _classify_resources(
+    dataset: dict,
+) -> tuple[dict[int, dict], dict[int, list[dict]]]:
+    """Split the dataset resources into annual and monthly files by year."""
     annual: dict[int, dict] = {}
     monthly: dict[int, list[dict]] = {}
     for resource in dataset.get("resources", []):
@@ -65,12 +62,40 @@ def backfill_resources(dataset: dict, from_year: int, to_year: int) -> list[dict
             monthly.setdefault(int(match.group(1)), []).append(
                 {"title": title, "url": resource["url"]}
             )
+    return annual, monthly
+
+
+def backfill_resources(dataset: dict, from_year: int, to_year: int) -> list[dict]:
+    """Ordered download plan for the base corpus (ADR-004).
+
+    A year covered by an annual file uses it alone; a year without one (the
+    current year) falls back to its monthly increments. Quarterly files and
+    unrelated resources never match the patterns, so they are excluded.
+    """
+    annual, monthly = _classify_resources(dataset)
     plan: list[dict] = []
     for year in range(from_year, to_year + 1):
         if year in annual:
             plan.append(annual[year])
         else:
             plan.extend(sorted(monthly.get(year, []), key=lambda r: r["title"]))
+    return plan
+
+
+def version_resources(dataset: dict, from_year: int, to_year: int) -> list[dict]:
+    """Ordered download plan for the version corpus (ADR-008).
+
+    Every delivery in range, annual and monthly alike: the overlaps between
+    an annual file and the monthly increments of the same year are the
+    signal fct_record_versions reads corrections and late arrivals from.
+    Quarterly files stay excluded (ADR-004).
+    """
+    annual, monthly = _classify_resources(dataset)
+    plan: list[dict] = []
+    for year in range(from_year, to_year + 1):
+        if year in annual:
+            plan.append(annual[year])
+        plan.extend(sorted(monthly.get(year, []), key=lambda r: r["title"]))
     return plan
 
 
