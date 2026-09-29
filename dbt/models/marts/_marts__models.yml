@@ -243,6 +243,42 @@ models:
         constraints:
           - type: not_null
 
+  - name: qa_reconciliation
+    description: >
+      Register death counts by year against the Insee official series and
+      the CepiDc all-causes counts, with relative gaps. The perimeters
+      differ on purpose (RNIPP registrants vs deaths occurring in France
+      vs residents), so the expectation is a small stable positive gap,
+      guarded by the singular tests with documented thresholds.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: annee
+        data_type: integer
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+      - name: deces_registre
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: deces_insee
+        data_type: bigint
+      - name: ecart_insee_pct
+        data_type: double
+      - name: champ_insee
+        data_type: varchar
+      - name: statut_insee
+        data_type: varchar
+      - name: exception_motif
+        data_type: varchar
+      - name: deces_cepidc
+        data_type: bigint
+      - name: ecart_cepidc_pct
+        data_type: double
+
   - name: qa_geo_orphelins
     description: >
       Death place codes that do not resolve in dim_geo or dim_pays at the

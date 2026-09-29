@@ -6,6 +6,11 @@ vars:
   # Measured stock of source incoherences (ADR-008). The singular tests
   # fail above these values: a rise means something new to examine.
   seuil_deces_avant_naissance: 70
+  # Reconciliation gaps (percent), measured on 2026-09-29: the register
+  # runs 0.4 to 1.6 points above the Insee series from 1990 and 1.6 to
+  # 1.8 above the CepiDc counts, a stable perimeter effect.
+  seuil_ecart_insee_pct: 2.0
+  seuil_ecart_cepidc_pct: 2.5
 
 model-paths: ["models"]
 target-path: target
@@ -27,3 +32,15 @@ seeds:
       +column_types:
         code_pattern: varchar
         motif: varchar
+    reference_deces_insee:
+      +column_types:
+        annee: integer
+        deces: bigint
+        champ: varchar
+        statut: varchar
+        exception_motif: varchar
+    reference_deces_cepidc:
+      +column_types:
+        annee: integer
+        deces: bigint
+        champ: varchar
