@@ -2,6 +2,11 @@ name: drm
 version: "0.1.0"
 profile: drm
 
+vars:
+  # Measured stock of source incoherences (ADR-008). The singular tests
+  # fail above these values: a rise means something new to examine.
+  seuil_deces_avant_naissance: 70
+
 model-paths: ["models"]
 target-path: target
 clean-targets: [target, dbt_packages]

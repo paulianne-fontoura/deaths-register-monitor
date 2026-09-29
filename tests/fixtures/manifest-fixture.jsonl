@@ -1,0 +1,1 @@
+{"period": "2026-08", "title": "deces-fixture.txt", "url": "https://static.data.gouv.fr/resources/fichier-des-personnes-decedees/20260908-000000/deces-fixture.txt", "path": "tests/fixtures/deces-fixture.txt", "sha256": "fixture-hash", "bytes": 1980, "lines": 10, "bad_lines": 1, "downloaded_at": "2026-09-22T00:00:00+00:00"}

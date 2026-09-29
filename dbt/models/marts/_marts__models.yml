@@ -35,6 +35,84 @@ models:
         data_tests:
           - not_null
 
+  - name: fct_death_records
+    description: >
+      One row per deduplicated death, current version (grain and rules in
+      ADR-008). Published values stay raw, typed columns are null when the
+      source is partial, incoherences are flagged and kept under measured
+      thresholds. The contract is enforced: the published schema is a
+      commitment.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: death_id
+        data_type: varchar
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+      - name: record_id
+        data_type: varchar
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+      - name: full_name
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: sex_code
+        data_type: varchar
+      - name: birth_date
+        data_type: date
+      - name: birth_date_raw
+        data_type: varchar
+      - name: birth_place_code
+        data_type: varchar
+      - name: birth_commune
+        data_type: varchar
+      - name: birth_country
+        data_type: varchar
+      - name: death_date
+        data_type: date
+      - name: death_date_raw
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: death_place_code
+        data_type: varchar
+      - name: certificate_number
+        data_type: varchar
+      - name: geo_version_id
+        data_type: varchar
+      - name: pays_version_id
+        data_type: varchar
+      - name: place_resolue
+        data_type: boolean
+        constraints:
+          - type: not_null
+      - name: dates_complete
+        data_type: boolean
+        constraints:
+          - type: not_null
+      - name: dates_coherentes
+        data_type: boolean
+        constraints:
+          - type: not_null
+      - name: n_source_rows
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: first_published_at
+        data_type: date
+        constraints:
+          - type: not_null
+      - name: last_published_at
+        data_type: date
+        constraints:
+          - type: not_null
+
   - name: qa_geo_orphelins
     description: >
       Death place codes that do not resolve in dim_geo or dim_pays at the
