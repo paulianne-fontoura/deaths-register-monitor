@@ -29,3 +29,6 @@
 - Completeness triangle (fct_completeness_triangle) and monthly quality
   (fct_monthly_quality) under enforced contracts, with a bound-proving
   singular test.
+- Reconciliation against the Insee official series and the CepiDc yearly
+  counts: sourced seeds, qa_reconciliation under an enforced contract,
+  threshold tests with the documented 1997 coverage-hole exception.

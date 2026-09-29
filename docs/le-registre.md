@@ -41,6 +41,13 @@ qui motivent le projet.
 - Des dates partielles sont publiées (mois ou jour à 00), et au moins un
   enregistrement daté dans le futur a été observé. Les valeurs publiées sont
   conservées brutes, le typage les met à null sans les corriger.
+- L'année 1997 porte un trou de couverture propre au registre - 508 833
+  décès contre 539 267 dans la série officielle de l'Insee, soit -5,6 %,
+  quand toutes les années 1990-2024 restent entre +0,4 % et +1,6 %.
+  L'écart positif structurel est un effet de champ - le registre couvre
+  les inscrits au RNIPP, décès transcrits à l'étranger compris, quand la
+  série Insee compte les décès survenus en France. La mesure est dans
+  qa_reconciliation, gardée par des tests à seuil documenté.
 - Les fichiers sont republiés sans journal de modifications. Les corrections
   ne se voient qu'en comparant des livraisons couvrant la même période -
   c'est la mesure centrale du projet (design doc, section 4.3).
@@ -75,4 +82,7 @@ prend en compte.
   "Fichier des personnes décédées"
 - Code officiel géographique - insee.fr/fr/information/2560452
 - COG millésime 2026, fichiers depuis 1943 - insee.fr/fr/information/8740222
+- Série officielle des décès - insee.fr/fr/statistiques/8560675 (DEC1,
+  France hors Mayotte jusqu'en 2013, France ensuite, 2022-2024 provisoires)
+- Effectifs toutes causes - cepidc.inserm.fr, grandes causes de décès
 - Constats du dépôt - profilage.md, NOTES.md, tests dbt
