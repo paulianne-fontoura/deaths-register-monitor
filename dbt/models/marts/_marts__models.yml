@@ -319,6 +319,48 @@ models:
         constraints:
           - type: not_null
 
+  - name: fct_department_quality
+    description: >
+      Register quality by death department and year: canonical deaths,
+      median delay to first publication, shares known within 30 and 90
+      days. Department derived from the published death place code
+      (971-976 kept whole, 99xxx grouped as etranger, empty as inconnu);
+      the grain is guaranteed by the group by. Aggregates only.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: departement
+        description: Department code, or etranger / inconnu buckets.
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: annee_deces
+        description: Death year.
+        data_type: integer
+        constraints:
+          - type: not_null
+      - name: n_deces
+        description: Canonical deaths of the department and year.
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: delai_median_jours
+        description: Median days between death and first publication.
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: part_connue_30_jours_pct
+        description: Share of deaths published within 30 days, percent.
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: part_connue_90_jours_pct
+        description: Share of deaths published within 90 days, percent.
+        data_type: double
+        constraints:
+          - type: not_null
+
   - name: fct_file_revisions
     description: >
       Revision history of the register deliveries, one row per file title
