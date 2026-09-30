@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: int_deces__person_keys
+    description: >
+      Candidate keys for duplicate detection (ADR-007). One row per
+      staging row, keys only, nothing filtered or merged. The person key
+      exists only when both dates are complete, so partial dates can
+      never create false matches.
+    columns:
+      - name: record_id
+        description: Physical row (file hash + line number).
+      - name: name_normalized
+        description: Name through the normalize_name macro.
+      - name: dates_complete
+        description: True when both typed dates are present.
+      - name: key_person
+        description: Normalized name plus raw dates, null when not eligible.
+      - name: key_event
+        description: Raw death date, place code and certificate number.
+
+  - name: int_deces__canonical
+    description: >
+      Canonical grouping of the register rows (ADR-008), two hierarchical
+      levels (exact row hash, then person key), joined to the deliveries
+      for the knowledge axis. version_rank 1 is the current version of
+      each group; fct_death_records and fct_record_versions read it.
+    columns:
+      - name: record_id
+        description: Physical row the version corresponds to.
+      - name: group_id
+        description: Canonical group ('p:' person key or 'h:' row hash).
+      - name: version_rank
+        description: 1 on the latest delivery, tie-broken deterministically.
+      - name: n_source_rows
+        description: Rows in the group.
+      - name: first_published_at
+        description: Upload date of the first delivery holding the group.
+      - name: last_published_at
+        description: Upload date of the latest delivery holding the group.
+
+  - name: int_lieux__resolution
+    description: >
+      Resolution of every (death place code, reference date) pair against
+      the versioned referential, shared by qa_geo_orphelins and
+      fct_death_records so the interval logic lives in one place. The
+      reference date floors at 1943-01-01.
+    columns:
+      - name: place_code
+        description: Death place code as published.
+      - name: ref_date
+        description: Event date floored at 1943-01-01.
+      - name: geo_version_id
+        description: Matching dim_geo version, when any.
+      - name: pays_version_id
+        description: Matching dim_pays version, when any.
+      - name: statut
+        description: geo, pays, orphelin or code_absent.

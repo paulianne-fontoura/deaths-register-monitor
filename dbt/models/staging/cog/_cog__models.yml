@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: stg_cog__communes
+    description: >
+      Communes and municipal arrondissements since 1943 (metropole and
+      DOM), typed from the COG file, one row per code and validity
+      period. Codes stay text so leading zeros survive.
+    columns:
+      - name: commune_code
+        description: INSEE place code.
+      - name: commune_type
+        description: TYPECOM (COM, ARM, COMD, COMA).
+      - name: commune_label
+        description: Label with article.
+      - name: commune_name_upper
+        description: Uppercase name without article.
+      - name: valid_from
+        description: First day the row is in force.
+      - name: valid_to
+        description: Last day, null when current.
+
+  - name: stg_cog__communes_outremer
+    description: >
+      Overseas and former-territory communes since 1943 (Algeria
+      included), same shape as stg_cog__communes.
+    columns:
+      - name: commune_code
+        description: INSEE place code.
+      - name: commune_type
+        description: Zonage nature of the source file.
+      - name: commune_label
+        description: Label with article.
+      - name: commune_name_upper
+        description: Uppercase name without article.
+      - name: valid_from
+        description: First day the row is in force.
+      - name: valid_to
+        description: Last day, null when current.
+
+  - name: stg_cog__pays
+    description: >
+      Countries and territories since 1943 from the COG countries file,
+      one row per 99xxx code and validity period.
+    columns:
+      - name: country_code
+        description: COG country code (99xxx).
+      - name: parent_country_code
+        description: Parent or successor code when the COG gives one.
+      - name: country_label
+        description: Country label as published.
+      - name: valid_from
+        description: First day the row is in force.
+      - name: valid_to
+        description: Last day, null when current.

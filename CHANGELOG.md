@@ -32,3 +32,6 @@
 - Reconciliation against the Insee official series and the CepiDc yearly
   counts: sourced seeds, qa_reconciliation under an enforced contract,
   threshold tests with the documented 1997 coverage-hole exception.
+- Republication snapshot (snap_fichiers) and fct_file_revisions under an
+  enforced contract; complete model documentation, dbt docs generated
+  locally (online publication deferred while the repo stays private).
