@@ -1,5 +1,6 @@
 """deaths-register-monitor command line interface."""
 
+import json
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -225,6 +226,43 @@ def cog(
     for name, status in results:
         typer.echo(f"{name}: {status}")
     typer.echo(f"reference: {settings.cog_dir}")
+
+
+@app.command()
+def probe(
+    json_path: Annotated[
+        Path | None,
+        typer.Option("--json", help="Write the full report to this file as JSON."),
+    ] = None,
+) -> None:
+    """Compare data.gouv deliveries with the local capture manifest (ADR-009).
+
+    Read-only and side-effect free - downloads nothing, exits 0 whatever the
+    findings. The monitoring workflows parse the JSON report and open or
+    close the capture issue from it; a non-zero exit is reserved for real
+    errors (API unreachable, malformed manifest).
+    """
+    settings = Settings()
+    with httpx.Client() as client:
+        dataset = registry.fetch_dataset(client)
+    entries = manifest.load(settings.manifest_path)
+    report = registry.probe_report(dataset, entries)
+    report["checked_at"] = datetime.now(UTC).isoformat(timespec="seconds")
+    typer.echo(f"listed:   {report['resources_listed']} deliveries on data.gouv")
+    typer.echo(f"captured: {report['captured_current']} already in the manifest")
+    typer.echo(f"new:      {len(report['new_deliveries'])} to capture")
+    for resource in report["new_deliveries"]:
+        typer.echo(f"  {resource['title']} (published {resource['published_at']})")
+    typer.echo(
+        f"retired:  {len(report['vanished_captured'])} no longer listed, all captured"
+    )
+    if report["new_deliveries"]:
+        typer.echo("hint:     uv run drm backfill deaths --all-deliveries")
+    if json_path is not None:
+        json_path.write_text(
+            json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        typer.echo(f"report:   {json_path}")
 
 
 @app.command()

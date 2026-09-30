@@ -35,3 +35,9 @@
 - Republication snapshot (snap_fichiers) and fct_file_revisions under an
   enforced contract; complete model documentation, dbt docs generated
   locally (online publication deferred while the repo stays private).
+- Scheduled operations (ADR-009): weekly data.gouv probe and monthly run
+  with fixture build, static docs and 90-day artifacts; capture and
+  incident issues opened, deduplicated and closed automatically, with a
+  deliberate-failure input for testing the alert path.
+- drm probe command comparing the data.gouv deliveries with the capture
+  manifest; the manifest (metadata only) is now tracked in git.

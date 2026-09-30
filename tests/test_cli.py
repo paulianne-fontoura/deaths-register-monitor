@@ -97,3 +97,27 @@ def test_ingest_with_parse_writes_parquet(httpx_mock, tmp_path, monkeypatch):
     parquet = tmp_path / "data" / "parquet" / "deces-2026-m08.txt.parquet"
     assert parquet.exists()
     assert "parquet:" in result.output
+
+
+def test_probe_writes_report_and_exits_zero(httpx_mock, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    versioned = "https://static.data.gouv.fr/resources/fichier-des-personnes-decedees"
+    httpx_mock.add_response(
+        url=DATASET_API,
+        json={
+            "resources": [
+                {
+                    "title": "deces-2026-m09.txt",
+                    "url": f"{versioned}/20261010-090000/deces-2026-m09.txt",
+                }
+            ]
+        },
+    )
+    result = runner.invoke(app, ["probe", "--json", "probe-report.json"])
+    assert result.exit_code == 0
+    assert "new:      1 to capture" in result.output
+    assert "deces-2026-m09.txt (published 2026-10-10)" in result.output
+    report = json.loads((tmp_path / "probe-report.json").read_text())
+    assert [r["title"] for r in report["new_deliveries"]] == ["deces-2026-m09.txt"]
+    assert report["captured_current"] == 0
+    assert "checked_at" in report

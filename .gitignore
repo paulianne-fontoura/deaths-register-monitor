@@ -1,5 +1,7 @@
 # donnees nominatives - jamais versionnees
-data/
+# le manifest (metadonnees seules) est versionne - ADR-009
+data/*
+!data/manifest.jsonl
 *.duckdb
 
 # python
@@ -19,3 +21,6 @@ logs/
 .env
 # outil local
 Claude outputs/
+Preparation_2027.xlsx
+_to_delete/
+probe-report.json

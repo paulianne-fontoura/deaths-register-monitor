@@ -75,3 +75,70 @@ def test_resolve_unknown_period_raises(httpx_mock):
     httpx_mock.add_response(url=DATASET_API, json={"resources": []})
     with httpx.Client() as client, pytest.raises(registry.ResourceNotFoundError):
         registry.resolve(client, "1969")
+
+
+VERSIONED = "https://static.data.gouv.fr/resources/fichier-des-personnes-decedees"
+
+
+def test_probe_report_flags_unknown_urls_as_new():
+    dataset = {
+        "resources": [
+            {"title": "deces-2025.txt", "url": f"{VERSIONED}/20260410-101010/d25.txt"},
+            {
+                "title": "deces-2026-m09.txt",
+                "url": f"{VERSIONED}/20261010-090000/m09.txt",
+            },
+            {
+                "title": "deces-2026-t3.txt",
+                "url": f"{VERSIONED}/20261010-090100/t3.txt",
+            },
+        ]
+    }
+    entries = [
+        {"title": "deces-2025.txt", "url": f"{VERSIONED}/20260410-101010/d25.txt"},
+    ]
+    report = registry.probe_report(dataset, entries)
+    assert report["resources_listed"] == 2  # quarterly excluded (ADR-004)
+    assert report["captured_current"] == 1
+    assert [r["title"] for r in report["new_deliveries"]] == ["deces-2026-m09.txt"]
+    assert report["new_deliveries"][0]["published_at"] == "2026-10-10"
+    assert report["vanished_captured"] == []
+
+
+def test_probe_report_republished_annual_counts_as_new():
+    dataset = {
+        "resources": [
+            {"title": "deces-2025.txt", "url": f"{VERSIONED}/20261120-080000/d25.txt"},
+        ]
+    }
+    entries = [
+        {"title": "deces-2025.txt", "url": f"{VERSIONED}/20260410-101010/d25.txt"},
+    ]
+    report = registry.probe_report(dataset, entries)
+    assert [r["title"] for r in report["new_deliveries"]] == ["deces-2025.txt"]
+    assert report["vanished_captured"] == []  # title still listed, only the url moved
+
+
+def test_probe_report_reports_retired_monthly_as_captured():
+    dataset = {
+        "resources": [
+            {"title": "deces-2024.txt", "url": f"{VERSIONED}/20251215-080000/d24.txt"},
+        ]
+    }
+    entries = [
+        {"title": "deces-2024.txt", "url": f"{VERSIONED}/20251215-080000/d24.txt"},
+        {"title": "deces-2024-m10.txt", "url": f"{VERSIONED}/20241105-080000/m10.txt"},
+    ]
+    report = registry.probe_report(dataset, entries)
+    assert report["new_deliveries"] == []
+    assert report["vanished_captured"] == ["deces-2024-m10.txt"]
+
+
+def test_probe_report_ignores_cog_manifest_entries():
+    dataset = {"resources": []}
+    entries = [
+        {"title": "v_commune_2026.csv", "url": "https://insee.fr/cog.csv"},
+    ]
+    report = registry.probe_report(dataset, entries)
+    assert report["new_deliveries"] == []
+    assert report["vanished_captured"] == []

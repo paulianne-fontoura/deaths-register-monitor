@@ -1,0 +1,122 @@
+name: Monthly
+
+# Run mensuel d'exploitation (ADR-009, etape 11). Le 5 de chaque mois a
+# 06h17 UTC (minute decalee - GitHub retarde les crons a l'heure pile) et a
+# la demande. Sonde data.gouv, controle du pipeline sur fixtures, docs
+# statiques, artefacts, alerte par issue. Aucune donnee nominative ne
+# transite ici - l'entrepot de reference vit sur le poste local.
+
+on:
+  schedule:
+    - cron: "17 6 5 * *"
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: "Provoquer un echec pour tester l'alerte"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: monitoring
+  cancel-in-progress: false
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+jobs:
+  monthly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - run: make setup
+
+      - name: Sonde data.gouv
+        id: probe
+        run: |
+          uv run drm probe --json probe-report.json
+          echo "new_count=$(jq '.new_deliveries | length' probe-report.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Echec simule (test de l'alerte)
+        if: inputs.simulate_failure
+        run: |
+          echo "echec simule demande via workflow_dispatch"
+          exit 1
+
+      - name: Controle du pipeline sur fixtures
+        run: make dbt-ci
+
+      - name: Docs statiques
+        run: uv run dbt docs generate --project-dir dbt --profiles-dir dbt --target ci --static
+
+      - name: Artefacts du run
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-mensuel-${{ github.run_number }}
+          path: |
+            probe-report.json
+            dbt/target/manifest.json
+            dbt/target/run_results.json
+            dbt/target/static_index.html
+          if-no-files-found: ignore
+          retention-days: 90
+
+      - name: Issue de capture
+        if: steps.probe.outputs.new_count != '0'
+        run: |
+          gh label create capture --force --color D93F0B --description "Livraison data.gouv a capturer"
+          {
+            echo "La sonde a repere des livraisons non capturees sur data.gouv."
+            echo
+            jq -r '.new_deliveries[] | "- \(.title) (publiee le \(.published_at))"' probe-report.json
+            echo
+            echo "Capture locale - uv run drm backfill deaths --all-deliveries, puis dbt build, puis commit du manifest."
+            echo "Fermee automatiquement quand le manifest est a jour. Sonde - ${RUN_URL}"
+          } > capture-body.md
+          number=$(gh issue list --label capture --state open --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body-file capture-body.md
+          else
+            gh issue create --title "Capture requise - nouvelles livraisons data.gouv" --label capture --body-file capture-body.md
+          fi
+
+      - name: Cloture des issues de capture
+        if: steps.probe.outputs.new_count == '0'
+        run: |
+          for number in $(gh issue list --label capture --state open --json number --jq '.[].number'); do
+            gh issue close "$number" --comment "Manifest a jour - sonde verte ${RUN_URL}"
+          done
+
+      - name: Cloture des incidents
+        if: success()
+        run: |
+          for number in $(gh issue list --label incident --state open --json number --jq '.[].number'); do
+            gh issue close "$number" --comment "Retabli - run mensuel vert ${RUN_URL}"
+          done
+
+      - name: Alerte incident
+        if: failure()
+        run: |
+          gh label create incident --force --color B60205 --description "Echec du run planifie"
+          {
+            echo "Le run planifie a echoue."
+            echo
+            echo "Run - ${RUN_URL}"
+            echo "Diagnostic - docs/design/adr/009-exploitation.md (runbooks detailles a l'etape 12)"
+            echo
+            echo "Fermee automatiquement au prochain run mensuel vert."
+          } > incident-body.md
+          number=$(gh issue list --label incident --state open --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body-file incident-body.md
+          else
+            gh issue create --title "Incident - echec du run planifie" --label incident --body-file incident-body.md
+          fi

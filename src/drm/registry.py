@@ -14,6 +14,7 @@ from drm.config import DATASET_API
 
 ANNUAL_RE = re.compile(r"^deces-(\d{4})\.txt$")
 MONTHLY_RE = re.compile(r"^deces-(\d{4})-m(\d{2})\.txt$")
+PUBLISHED_RE = re.compile(r"/(\d{8})-\d{6}/")
 
 
 class ResourceNotFoundError(Exception):
@@ -97,6 +98,57 @@ def version_resources(dataset: dict, from_year: int, to_year: int) -> list[dict]
             plan.append(annual[year])
         plan.extend(sorted(monthly.get(year, []), key=lambda r: r["title"]))
     return plan
+
+
+def _published_date(url: str) -> str | None:
+    """Upload date embedded in a versioned data.gouv url, as 'YYYY-MM-DD'."""
+    if match := PUBLISHED_RE.search(url):
+        raw = match.group(1)
+        return f"{raw[0:4]}-{raw[4:6]}-{raw[6:8]}"
+    return None
+
+
+def probe_report(dataset: dict, entries: list[dict]) -> dict:
+    """Compare the deliveries data.gouv lists with the capture manifest.
+
+    The manifest is append-only and keeps one entry per captured version, so
+    a listed url the manifest does not know is a delivery to capture - a new
+    monthly increment, or a republication of an existing title under a new
+    versioned url. A captured title data.gouv no longer lists was retired
+    (monthly increments are deleted at annual consolidation, ADR-008); it is
+    reported for the audit trail, never as a failure. A file published then
+    retired between two probes would be invisible here - that risk is what
+    the weekly cadence bounds (ADR-009).
+    """
+    annual, monthly = _classify_resources(dataset)
+    listed: list[dict] = list(annual.values())
+    for year_resources in monthly.values():
+        listed.extend(year_resources)
+    register_entries = [
+        entry
+        for entry in entries
+        if ANNUAL_RE.match(entry.get("title", ""))
+        or MONTHLY_RE.match(entry.get("title", ""))
+    ]
+    captured_urls = {entry.get("url") for entry in register_entries}
+    new_deliveries = sorted(
+        (
+            {**resource, "published_at": _published_date(resource["url"])}
+            for resource in listed
+            if resource["url"] not in captured_urls
+        ),
+        key=lambda resource: resource["title"],
+    )
+    listed_titles = {resource["title"] for resource in listed}
+    vanished_captured = sorted(
+        {entry["title"] for entry in register_entries} - listed_titles
+    )
+    return {
+        "resources_listed": len(listed),
+        "captured_current": len(listed) - len(new_deliveries),
+        "new_deliveries": new_deliveries,
+        "vanished_captured": vanished_captured,
+    }
 
 
 def resolve(client: httpx.Client, period: str) -> dict:
