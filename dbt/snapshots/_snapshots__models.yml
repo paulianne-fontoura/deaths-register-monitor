@@ -1,0 +1,9 @@
+version: 2
+
+snapshots:
+  - name: snap_fichiers
+    description: >
+      Current state of every register delivery, one row per file title,
+      historised as a slowly changing dimension. A republication behind
+      the same title opens a new version; fct_file_revisions exposes the
+      validity intervals.

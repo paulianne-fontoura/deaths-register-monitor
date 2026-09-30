@@ -12,16 +12,8 @@ models:
         data_tests:
           - unique
           - not_null
-      - name: row_hash
-        data_tests:
-          - not_null
-      - name: file_hash
-        data_tests:
-          - not_null
       - name: full_name
-        data_tests:
-          - not_null
-      - name: death_date_raw
+        description: Name and first names, exactly as published.
         data_tests:
           - not_null
       - name: sex_code
@@ -35,37 +27,100 @@ models:
                 values: ['1', '2']
               config:
                 severity: warn
+      - name: birth_date_raw
+        description: Birth date as published, partial '00' parts kept.
+      - name: birth_place_code
+        description: Birth place code as published.
+      - name: birth_commune
+        description: Birth commune label as published.
+      - name: birth_country
+        description: Birth country label as published.
+      - name: death_date_raw
+        description: Death date as published.
+        data_tests:
+          - not_null
+      - name: death_place_code
+        description: Death place code as published.
+      - name: certificate_number
+        description: Death certificate number as published.
+      - name: birth_date
+        description: Typed birth date, null when partial or invalid.
+      - name: death_date
+        description: Typed death date, null when partial or invalid.
+      - name: source_line_number
+        description: Line number in the source file, written at parsing.
+      - name: source_file
+        description: Source file name, written at parsing.
+      - name: row_hash
+        description: Content hash of the line, written at parsing.
+        data_tests:
+          - not_null
+      - name: file_hash
+        description: Sha256 of the file version the line comes from.
+        data_tests:
+          - not_null
+      - name: ingested_at
+        description: Load timestamp, drives source freshness.
 
   - name: stg_insee__load_log
+    description: One row per file version loaded into the warehouse.
     columns:
       - name: file_hash
+        description: Sha256 of the loaded file version.
         data_tests:
           - unique
           - not_null
+      - name: source_file
+        description: File name the load came from.
+      - name: rows_in_file
+        description: Rows in the parquet before the anti join.
       - name: rows_inserted
+        description: New rows actually inserted (idempotence measure).
         data_tests:
           - not_null
+      - name: seconds
+        description: Load duration in seconds.
+      - name: loaded_at
+        description: Load timestamp.
 
   - name: stg_insee__manifest
     description: >
       Register deliveries with their period and the data.gouv upload date
-      extracted from the versioned url (knowledge axis, ADR-008).
+      extracted from the versioned url (knowledge axis, ADR-008). is_base
+      marks the ADR-004 corpus the quality measures read.
     columns:
+      - name: period
+        description: Period the file covers ('1970', '2026-08').
+        data_tests:
+          - not_null
+      - name: title
+        description: File name on data.gouv.
       - name: file_hash
+        description: Sha256 of the downloaded file, unique per version.
         data_tests:
           - unique
           - not_null
-      - name: period
-        data_tests:
-          - not_null
+      - name: url
+        description: Versioned data.gouv url the file was fetched from.
       - name: published_at
+        description: Upload date embedded in the url.
         data_tests:
           - not_null
+      - name: lines_in_file
+        description: Line count recorded at download.
+      - name: bytes
+        description: Size in bytes recorded at download.
+      - name: downloaded_at
+        description: Download timestamp of the manifest entry.
       - name: delivery_kind
+        description: annual or monthly, derived from the period shape.
         data_tests:
           - accepted_values:
               arguments:
                 values: ['annual', 'monthly']
       - name: is_base
+        description: >
+          True on the ADR-004 base corpus (annuals, plus monthlies of years
+          without one); false on the version-corpus overlaps.
         data_tests:
           - not_null

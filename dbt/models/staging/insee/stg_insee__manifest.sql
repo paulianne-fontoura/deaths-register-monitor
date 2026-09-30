@@ -22,6 +22,7 @@ renamed as (
         cast(strptime(regexp_extract(url, '/(\d{8})-\d{6}/', 1), '%Y%m%d') as date)
             as published_at,
         lines as lines_in_file,
+        bytes,
         cast(downloaded_at as timestamp) as downloaded_at,
         case
             when regexp_matches(period, '^\d{4}$') then 'annual'
@@ -50,6 +51,7 @@ final as (
         renamed.url,
         renamed.published_at,
         renamed.lines_in_file,
+        renamed.bytes,
         renamed.downloaded_at,
         renamed.delivery_kind,
         renamed.delivery_kind = 'annual'

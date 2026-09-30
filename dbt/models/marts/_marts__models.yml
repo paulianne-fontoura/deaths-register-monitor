@@ -9,31 +9,63 @@ models:
       earliest known state (rule in docs/le-registre.md).
     columns:
       - name: geo_version_id
+        description: Place code plus validity start, unique by construction.
         data_tests:
           - unique
           - not_null
       - name: commune_code
+        description: INSEE place code, shared by successive versions.
         data_tests:
           - not_null
-      - name: valid_from
-        data_tests:
-          - not_null
+      - name: commune_type
+        description: TYPECOM of the source file (COM, ARM, COMD, COMA).
+      - name: commune_label
+        description: Label with article, as published.
+      - name: commune_name_upper
+        description: Uppercase name without article, as published.
       - name: scope
+        description: Source file family the version comes from.
         data_tests:
           - accepted_values:
               arguments:
                 values: ['metropole_dom', 'outremer_historique']
+      - name: valid_from
+        description: First day the version is in force.
+        data_tests:
+          - not_null
+      - name: valid_to
+        description: Last day the version is in force, null when current.
+      - name: is_current
+        description: True when valid_to is null.
+      - name: departement_code
+        description: Departement of the current millesime, current codes only.
+      - name: region_code
+        description: Region of the current millesime, current codes only.
 
   - name: dim_pays
-    description: Versioned country dimension from the COG countries file.
+    description: >
+      Versioned country dimension from the COG countries file. One row per
+      99xxx code and validity period; 99xxx death place codes resolve here.
     columns:
       - name: pays_version_id
+        description: Country code plus validity start, unique by construction.
         data_tests:
           - unique
           - not_null
       - name: country_code
+        description: COG country code (99xxx).
         data_tests:
           - not_null
+      - name: parent_country_code
+        description: Successor or parent country code when the COG gives one.
+      - name: country_label
+        description: Country label as published.
+      - name: valid_from
+        description: First day the version is in force.
+      - name: valid_to
+        description: Last day the version is in force, null when current.
+      - name: is_current
+        description: True when valid_to is null.
 
   - name: fct_death_records
     description: >
@@ -47,68 +79,89 @@ models:
         enforced: true
     columns:
       - name: death_id
+        description: Canonical group id (person key, or row hash prefix).
         data_type: varchar
         constraints:
           - type: not_null
         data_tests:
           - unique
       - name: record_id
+        description: Source row of the current version (file hash + line).
         data_type: varchar
         constraints:
           - type: not_null
         data_tests:
           - unique
       - name: full_name
+        description: Name and first names, exactly as published.
         data_type: varchar
         constraints:
           - type: not_null
       - name: sex_code
+        description: Published sex code ('1' or '2', defects kept).
         data_type: varchar
       - name: birth_date
+        description: Typed birth date, null when partial or invalid.
         data_type: date
       - name: birth_date_raw
+        description: Birth date as published (partial '00' parts kept).
         data_type: varchar
       - name: birth_place_code
+        description: Birth place code as published.
         data_type: varchar
       - name: birth_commune
+        description: Birth commune label as published.
         data_type: varchar
       - name: birth_country
+        description: Birth country label as published.
         data_type: varchar
       - name: death_date
+        description: Typed death date, null when partial or invalid.
         data_type: date
       - name: death_date_raw
+        description: Death date as published.
         data_type: varchar
         constraints:
           - type: not_null
       - name: death_place_code
+        description: Death place code as published.
         data_type: varchar
       - name: certificate_number
+        description: Death certificate number as published.
         data_type: varchar
       - name: geo_version_id
+        description: dim_geo version in force at the event date, when resolved.
         data_type: varchar
       - name: pays_version_id
+        description: dim_pays version in force at the event date, when resolved.
         data_type: varchar
       - name: place_resolue
+        description: True when the death place resolves in the referential.
         data_type: boolean
         constraints:
           - type: not_null
       - name: dates_complete
+        description: True when both typed dates are present (ADR-007 rule).
         data_type: boolean
         constraints:
           - type: not_null
       - name: dates_coherentes
+        description: False when the death predates the birth (measured stock).
         data_type: boolean
         constraints:
           - type: not_null
       - name: n_source_rows
+        description: Source rows collapsed into this record.
         data_type: bigint
         constraints:
           - type: not_null
       - name: first_published_at
+        description: Upload date of the first delivery holding the record.
         data_type: date
         constraints:
           - type: not_null
       - name: last_published_at
+        description: Upload date of the latest delivery holding the record.
         data_type: date
         constraints:
           - type: not_null
@@ -124,40 +177,49 @@ models:
         enforced: true
     columns:
       - name: death_id
+        description: Canonical group the row belongs to.
         data_type: varchar
         constraints:
           - type: not_null
       - name: record_id
+        description: Physical row (file hash + line), unique by construction.
         data_type: varchar
         constraints:
           - type: not_null
         data_tests:
           - unique
       - name: file_hash
+        description: Delivery version the row was published in.
         data_type: varchar
         constraints:
           - type: not_null
       - name: row_hash
+        description: Content hash; it changes when the record is corrected.
         data_type: varchar
         constraints:
           - type: not_null
       - name: period
+        description: Period of the delivery ('1970', '2026-08').
         data_type: varchar
         constraints:
           - type: not_null
       - name: published_at
+        description: Upload date of the delivery on data.gouv.
         data_type: date
         constraints:
           - type: not_null
       - name: version_rank
+        description: 1 for the current version, then older versions.
         data_type: bigint
         constraints:
           - type: not_null
       - name: is_current
+        description: True on the version fct_death_records carries.
         data_type: boolean
         constraints:
           - type: not_null
       - name: has_corrections
+        description: True when the death content differs between deliveries.
         data_type: boolean
         constraints:
           - type: not_null
@@ -173,32 +235,39 @@ models:
         enforced: true
     columns:
       - name: triangle_id
+        description: Death month plus knowledge date, unique by construction.
         data_type: varchar
         constraints:
           - type: not_null
         data_tests:
           - unique
       - name: mois_deces
+        description: Death month (first day).
         data_type: date
         constraints:
           - type: not_null
       - name: published_at
+        description: Knowledge point, a distinct data.gouv upload date.
         data_type: date
         constraints:
           - type: not_null
       - name: delai_mois
+        description: Months between the death month and the knowledge point.
         data_type: bigint
         constraints:
           - type: not_null
       - name: n_connus
+        description: Deaths of the month known at that date (cumulative).
         data_type: bigint
         constraints:
           - type: not_null
       - name: n_total_courant
+        description: Deaths of the month known today (the denominator).
         data_type: bigint
         constraints:
           - type: not_null
       - name: part_connue
+        description: n_connus over n_total_courant, in ]0, 1] by construction.
         data_type: double
         constraints:
           - type: not_null
@@ -213,35 +282,130 @@ models:
         enforced: true
     columns:
       - name: mois_deces
+        description: Death month (first day), one row each.
         data_type: date
         constraints:
           - type: not_null
         data_tests:
           - unique
       - name: n_deces
+        description: Canonical deaths of the month.
         data_type: bigint
         constraints:
           - type: not_null
       - name: delai_median_jours
+        description: Median days between death and first publication.
         data_type: bigint
         constraints:
           - type: not_null
       - name: n_connus_30_jours
+        description: Deaths published within 30 days of the death.
         data_type: bigint
         constraints:
           - type: not_null
       - name: n_connus_90_jours
+        description: Deaths published within 90 days of the death.
         data_type: bigint
         constraints:
           - type: not_null
       - name: n_lignes_repliees
+        description: Source rows beyond one per death (duplicates collapsed).
         data_type: bigint
         constraints:
           - type: not_null
       - name: n_deces_corriges
+        description: Deaths whose content changed between deliveries.
         data_type: bigint
         constraints:
           - type: not_null
+
+  - name: fct_file_revisions
+    description: >
+      Revision history of the register deliveries, one row per file title
+      and per observed content version, from the snap_fichiers snapshot.
+      A republication closes the previous row and opens a new one; the
+      validity interval says when each version was the live one.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: revision_id
+        description: File title plus revision rank, unique by construction.
+        data_type: varchar
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+      - name: title
+        description: File name on data.gouv (deces-2026-m08.txt).
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: period
+        description: Period the file covers ('1970', '2026-08').
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: delivery_kind
+        description: annual or monthly.
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: file_hash
+        description: Content hash of this revision.
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: url
+        description: Versioned data.gouv url of this revision.
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: published_at
+        description: Upload date embedded in the url.
+        data_type: date
+        constraints:
+          - type: not_null
+      - name: lines_in_file
+        description: Line count of this revision.
+        data_type: bigint
+      - name: bytes
+        description: Size in bytes of this revision.
+        data_type: bigint
+      - name: valid_from
+        description: When this revision became the observed live version.
+        data_type: timestamp
+        constraints:
+          - type: not_null
+      - name: valid_to
+        description: When it stopped being the live version, null if current.
+        data_type: timestamp
+      - name: is_current
+        description: True when valid_to is null.
+        data_type: boolean
+        constraints:
+          - type: not_null
+      - name: revision_rank
+        description: 1 for the first observed version, then upward.
+        data_type: bigint
+        constraints:
+          - type: not_null
+
+  - name: qa_doublons
+    description: >
+      Duplicate measurement of the register (ADR-007), on the base corpus
+      only. One row per rule with group and excess-row counts; nothing is
+      merged, the numbers are the deliverable.
+    columns:
+      - name: regle
+        description: Measured rule (exact line, person key, event key).
+        data_tests:
+          - unique
+          - not_null
+      - name: groupes
+        description: Duplicate groups the rule finds.
+      - name: lignes_en_trop
+        description: Rows beyond one per group, null for scope-only rows.
 
   - name: qa_reconciliation
     description: >
@@ -255,28 +419,37 @@ models:
         enforced: true
     columns:
       - name: annee
+        description: Death year (typed dates only).
         data_type: integer
         constraints:
           - type: not_null
         data_tests:
           - unique
       - name: deces_registre
+        description: Canonical deaths of the year in the register.
         data_type: bigint
         constraints:
           - type: not_null
       - name: deces_insee
+        description: Official Insee count (reference_deces_insee seed).
         data_type: bigint
       - name: ecart_insee_pct
+        description: Relative gap register minus Insee, in percent.
         data_type: double
       - name: champ_insee
+        description: Perimeter of the Insee figure for that year.
         data_type: varchar
       - name: statut_insee
+        description: definitif or provisoire, as published.
         data_type: varchar
       - name: exception_motif
+        description: Documented exception (the 1997 coverage hole).
         data_type: varchar
       - name: deces_cepidc
+        description: CepiDc all-causes count (reference_deces_cepidc seed).
         data_type: bigint
       - name: ecart_cepidc_pct
+        description: Relative gap register minus CepiDc, in percent.
         data_type: double
 
   - name: qa_geo_orphelins
@@ -288,10 +461,12 @@ models:
       Documented exceptions live in the geo_exceptions seed.
     columns:
       - name: place_code
+        description: Death place code as published, one row each.
         data_tests:
           - unique
           - not_null
       - name: statut
+        description: Diagnosis of why the code does not resolve.
         data_tests:
           - not_null
           - accepted_values:
@@ -301,3 +476,13 @@ models:
                   - 'commune_hors_validite'
                   - 'pays_hors_validite'
                   - 'hors_referentiel'
+      - name: libelle_connu
+        description: Best known label from any period, curation aid.
+      - name: n_deces
+        description: Deaths carrying the code in the base corpus.
+      - name: premiere_date_ref
+        description: Earliest reference date seen for the code.
+      - name: derniere_date_ref
+        description: Latest reference date seen for the code.
+      - name: date_absente
+        description: True when some carriers have no typed death date.
