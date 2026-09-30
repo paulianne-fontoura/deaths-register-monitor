@@ -1,0 +1,426 @@
+{
+  "compatibilityLevel": 1606,
+  "model": {
+    "annotations": [
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      },
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"fct_monthly_quality\",\"fct_completeness_triangle\",\"fct_department_quality\",\"qa_reconciliation\",\"departements\"]"
+      },
+      {
+        "name": "PBI_ProTooling",
+        "value": "[\"DevMode\"]"
+      }
+    ],
+    "culture": "en-US",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "relationships": [
+      {
+        "name": "36226891-54fc-4d4e-9c44-1bc560f7af1c",
+        "fromColumn": "departement",
+        "fromTable": "fct_department_quality",
+        "toColumn": "code",
+        "toTable": "departements"
+      }
+    ],
+    "sourceQueryCulture": "en-US",
+    "tables": [
+      {
+        "name": "fct_monthly_quality",
+        "columns": [
+          {
+            "name": "mois_deces",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "Long Date",
+            "lineageTag": "fbb26aa3-98c4-40ff-9041-248277dfef35",
+            "sourceColumn": "mois_deces",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "n_deces",
+            "dataType": "int64",
+            "lineageTag": "05bd382e-1efa-4868-ae99-bf856c34754b",
+            "sourceColumn": "n_deces",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "delai_median_jours",
+            "dataType": "int64",
+            "lineageTag": "0a334bee-4b20-4e16-a815-bb7ef2c367e6",
+            "sourceColumn": "delai_median_jours",
+            "summarizeBy": "average"
+          },
+          {
+            "name": "n_connus_30_jours",
+            "dataType": "int64",
+            "lineageTag": "dc5123e0-b65e-443b-b07f-1b66743b49fd",
+            "sourceColumn": "n_connus_30_jours",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "n_connus_90_jours",
+            "dataType": "int64",
+            "lineageTag": "4ea0d5af-b825-44e5-90b8-4a598e8167cb",
+            "sourceColumn": "n_connus_90_jours",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "n_lignes_repliees",
+            "dataType": "int64",
+            "lineageTag": "eef1c148-0509-487b-b07f-aa807d0d3b8b",
+            "sourceColumn": "n_lignes_repliees",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "n_deces_corriges",
+            "dataType": "int64",
+            "lineageTag": "4c9cca53-e472-4341-ac19-ac9b4bb92fbe",
+            "sourceColumn": "n_deces_corriges",
+            "summarizeBy": "sum"
+          }
+        ],
+        "lineageTag": "3a29f82b-fe4c-4125-a38f-df9315b3788e",
+        "measures": [
+          {
+            "name": "Deaths",
+            "expression": "SUM(fct_monthly_quality[n_deces])",
+            "formatString": "#,0",
+            "lineageTag": "554c8e5d-502a-476a-8f74-5f55c90557a3"
+          },
+          {
+            "name": "% known within 30 days",
+            "expression": "DIVIDE(SUM(fct_monthly_quality[n_connus_30_jours]), SUM(fct_monthly_quality[n_deces]))",
+            "formatString": "0.0%",
+            "lineageTag": "78e49b4a-6aa8-4f4f-89ba-e85c8f20a315"
+          },
+          {
+            "name": "% known within 90 days",
+            "expression": "DIVIDE(SUM(fct_monthly_quality[n_connus_90_jours]), SUM(fct_monthly_quality[n_deces]))",
+            "formatString": "0.0%",
+            "lineageTag": "cd7456fd-534c-499e-a5d5-246faf9317ad"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fct_monthly_quality",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:\\Users\\pfontoura\\Downloads\\deaths-register-monitor\\data\\exports\\fct_monthly_quality.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+                "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
+                "    ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{\"mois_deces\", type date}, {\"n_deces\", Int64.Type}, {\"delai_median_jours\", Int64.Type}, {\"n_connus_30_jours\", Int64.Type}, {\"n_connus_90_jours\", Int64.Type}, {\"n_lignes_repliees\", Int64.Type}, {\"n_deces_corriges\", Int64.Type}}, \"en-US\")",
+                "in",
+                "    ChangedType"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "fct_completeness_triangle",
+        "columns": [
+          {
+            "name": "triangle_id",
+            "dataType": "string",
+            "lineageTag": "e2209cf4-c209-4c83-81a5-fa4e93e34e0d",
+            "sourceColumn": "triangle_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "mois_deces",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "Short Date",
+            "lineageTag": "238adcfe-8e86-44f1-b00c-857cdc85c8db",
+            "sourceColumn": "mois_deces",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "published_at",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "Long Date",
+            "lineageTag": "330d061d-96bf-4cb8-84b9-143cd3df0b93",
+            "sourceColumn": "published_at",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "delai_mois",
+            "dataType": "int64",
+            "lineageTag": "01601386-740d-4ef6-9a17-0bcc2441dd33",
+            "sourceColumn": "delai_mois",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "n_connus",
+            "dataType": "int64",
+            "lineageTag": "3512196f-4485-42b1-8157-ffa00f9a464e",
+            "sourceColumn": "n_connus",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "n_total_courant",
+            "dataType": "int64",
+            "lineageTag": "aeb3d1ee-4d32-41ba-92f9-62e7f9d859d5",
+            "sourceColumn": "n_total_courant",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "part_connue",
+            "dataType": "double",
+            "formatString": "0.00\\ %;-0.00\\ %;0.00\\ %",
+            "lineageTag": "2ef7e8a4-4318-403a-acc1-724101b74ba9",
+            "sourceColumn": "part_connue",
+            "summarizeBy": "average"
+          }
+        ],
+        "lineageTag": "ec087c3b-0144-4c2f-8a48-1f79b8cd0fce",
+        "partitions": [
+          {
+            "name": "fct_completeness_triangle",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:\\Users\\pfontoura\\Downloads\\deaths-register-monitor\\data\\exports\\fct_completeness_triangle.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+                "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
+                "    ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{\"triangle_id\", type text}, {\"mois_deces\", type date}, {\"published_at\", type date}, {\"delai_mois\", Int64.Type}, {\"n_connus\", Int64.Type}, {\"n_total_courant\", Int64.Type}, {\"part_connue\", type number}}, \"en-US\")",
+                "in",
+                "    ChangedType"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "fct_department_quality",
+        "columns": [
+          {
+            "name": "departement",
+            "dataType": "string",
+            "lineageTag": "1591ec6c-331d-4d69-849d-a04952db6f49",
+            "sourceColumn": "departement",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "annee_deces",
+            "dataType": "int64",
+            "lineageTag": "2a5f5cfb-6041-4501-ab0b-836abf58bed8",
+            "sourceColumn": "annee_deces",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "n_deces",
+            "dataType": "int64",
+            "lineageTag": "c2da8d9c-1569-4fdd-9b1e-ad1c6627f2f9",
+            "sourceColumn": "n_deces",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "delai_median_jours",
+            "dataType": "int64",
+            "lineageTag": "44e026b1-9d09-4f62-ba71-bc95453be00d",
+            "sourceColumn": "delai_median_jours",
+            "summarizeBy": "average"
+          },
+          {
+            "name": "part_connue_30_jours_pct",
+            "dataType": "double",
+            "lineageTag": "a7fbefa4-98af-44fd-90a0-501f3cd300df",
+            "sourceColumn": "part_connue_30_jours_pct",
+            "summarizeBy": "average"
+          },
+          {
+            "name": "part_connue_90_jours_pct",
+            "dataType": "double",
+            "lineageTag": "92fb95ff-3b51-4097-bbe4-e59e6d5926b9",
+            "sourceColumn": "part_connue_90_jours_pct",
+            "summarizeBy": "average"
+          }
+        ],
+        "lineageTag": "e0165467-6b76-45c1-afc8-33a7dbbcf3dd",
+        "partitions": [
+          {
+            "name": "fct_department_quality",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:\\Users\\pfontoura\\Downloads\\deaths-register-monitor\\data\\exports\\fct_department_quality.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+                "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
+                "    ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{\"departement\", type text}, {\"annee_deces\", Int64.Type}, {\"n_deces\", Int64.Type}, {\"delai_median_jours\", Int64.Type}, {\"part_connue_30_jours_pct\", type number}, {\"part_connue_90_jours_pct\", type number}}, \"en-US\")",
+                "in",
+                "    ChangedType"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "qa_reconciliation",
+        "columns": [
+          {
+            "name": "annee",
+            "dataType": "int64",
+            "lineageTag": "5c30b92a-a7cf-4af8-abf8-8fbff4dac793",
+            "sourceColumn": "annee",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "deces_registre",
+            "dataType": "int64",
+            "lineageTag": "286caed9-778e-43a8-9624-45bcafac015f",
+            "sourceColumn": "deces_registre",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "deces_insee",
+            "dataType": "int64",
+            "lineageTag": "4b2d39b7-fdc3-466a-b940-7c0c77224473",
+            "sourceColumn": "deces_insee",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "ecart_insee_pct",
+            "dataType": "double",
+            "lineageTag": "a32a3bd6-fb8b-4e52-bb9e-8994d1bacc23",
+            "sourceColumn": "ecart_insee_pct",
+            "summarizeBy": "average"
+          },
+          {
+            "name": "champ_insee",
+            "dataType": "string",
+            "lineageTag": "81606e52-b861-45cb-9c25-57bf2b1c59ce",
+            "sourceColumn": "champ_insee",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "statut_insee",
+            "dataType": "string",
+            "lineageTag": "c6217162-827b-4118-b926-26d4ef4535f4",
+            "sourceColumn": "statut_insee",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "exception_motif",
+            "dataType": "string",
+            "lineageTag": "8d1d4315-859e-4526-92a5-48a1242c1357",
+            "sourceColumn": "exception_motif",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "deces_cepidc",
+            "dataType": "int64",
+            "lineageTag": "173ade65-a50c-4fc2-a3cf-f38e87f3c0b2",
+            "sourceColumn": "deces_cepidc",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "ecart_cepidc_pct",
+            "dataType": "double",
+            "lineageTag": "b1967986-891b-4b06-a810-ecca679c8ce8",
+            "sourceColumn": "ecart_cepidc_pct",
+            "summarizeBy": "average"
+          }
+        ],
+        "lineageTag": "0c94083f-756a-465e-a78d-774fc288cfef",
+        "partitions": [
+          {
+            "name": "qa_reconciliation",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:\\Users\\pfontoura\\Downloads\\deaths-register-monitor\\data\\exports\\qa_reconciliation.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+                "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
+                "    ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{\"annee\", Int64.Type}, {\"deces_registre\", Int64.Type}, {\"deces_insee\", Int64.Type}, {\"ecart_insee_pct\", type number}, {\"champ_insee\", type text}, {\"statut_insee\", type text}, {\"exception_motif\", type text}, {\"deces_cepidc\", Int64.Type}, {\"ecart_cepidc_pct\", type number}}, \"en-US\")",
+                "in",
+                "    ChangedType"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "departements",
+        "columns": [
+          {
+            "name": "code",
+            "dataType": "string",
+            "lineageTag": "08f9a0db-956f-4af6-bb7d-52379075ac77",
+            "sourceColumn": "code",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "nom",
+            "dataType": "string",
+            "lineageTag": "2032ab0b-9fe2-47ca-b8a1-9dbd86053fb6",
+            "sourceColumn": "nom",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "nom_carte",
+            "dataCategory": "Place",
+            "dataType": "string",
+            "lineageTag": "7900df76-44f7-4f4d-a80e-3843f6429701",
+            "sourceColumn": "nom_carte",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "zone",
+            "dataType": "string",
+            "lineageTag": "5f2989ea-c7d4-418e-af34-82d69e128ff9",
+            "sourceColumn": "zone",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "2794b283-755a-4703-94d7-28f58ea36547",
+        "partitions": [
+          {
+            "name": "departements",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:\\Users\\pfontoura\\Downloads\\deaths-register-monitor\\data\\exports\\departements.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+                "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
+                "    ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{\"code\", type text}, {\"nom\", type text}, {\"nom_carte\", type text}, {\"zone\", type text}}, \"en-US\")",
+                "in",
+                "    ChangedType"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

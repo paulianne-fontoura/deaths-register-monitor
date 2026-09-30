@@ -51,3 +51,8 @@
   committed figure. Headline on the observable window: 99.2% of deaths
   reach the public register within 90 days, 60.2% within 30; the archive
   era shows why continuous capture matters.
+- Power BI report as a versioned .pbip project (docs/bi): overview cards,
+  archive-cliff curve, completeness-triangle matrix and department
+  ranking on the exported aggregates; map visuals are tenant-disabled,
+  the ranking replaces them and surfaces the slow consular
+  transcriptions (94-day median abroad in 2025).

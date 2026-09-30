@@ -1,0 +1,269 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "name": "4087eb6e24d682374e65",
+  "position": {
+    "x": 1035.8662613981762,
+    "y": 35.015197568389056,
+    "z": 1,
+    "height": 1008.1458966565349,
+    "width": 850.57750759878422,
+    "tabOrder": 1
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "departements"
+                    }
+                  },
+                  "Property": "nom"
+                }
+              },
+              "queryRef": "departements.nom",
+              "nativeQueryRef": "nom"
+            },
+            {
+              "field": {
+                "Aggregation": {
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "fct_department_quality"
+                        }
+                      },
+                      "Property": "n_deces"
+                    }
+                  },
+                  "Function": 0
+                }
+              },
+              "queryRef": "Sum(fct_department_quality.n_deces)",
+              "nativeQueryRef": "Somme de n_deces"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_department_quality"
+                    }
+                  },
+                  "Property": "delai_median_jours"
+                }
+              },
+              "queryRef": "Avg(fct_department_quality.delai_median_jours)",
+              "nativeQueryRef": "delai_median_jours"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_department_quality"
+                    }
+                  },
+                  "Property": "part_connue_30_jours_pct"
+                }
+              },
+              "queryRef": "Avg(fct_department_quality.part_connue_30_jours_pct)",
+              "nativeQueryRef": "part_connue_30_jours_pct"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_department_quality"
+                    }
+                  },
+                  "Property": "part_connue_90_jours_pct"
+                }
+              },
+              "queryRef": "Avg(fct_department_quality.part_connue_90_jours_pct)",
+              "nativeQueryRef": "part_connue_90_jours_pct"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Aggregation": {
+                "Expression": {
+                  "Column": {
+                    "Expression": {
+                      "SourceRef": {
+                        "Entity": "fct_department_quality"
+                      }
+                    },
+                    "Property": "delai_median_jours"
+                  }
+                },
+                "Function": 1
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Department detail, 2025'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "e1d3e3fc4b5e538516ab",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "departements"
+              }
+            },
+            "Property": "nom"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "d08c10d9ea3351d90727",
+        "field": {
+          "Aggregation": {
+            "Expression": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_department_quality"
+                  }
+                },
+                "Property": "n_deces"
+              }
+            },
+            "Function": 0
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "a36db69470beb21b5653",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fct_department_quality"
+              }
+            },
+            "Property": "annee_deces"
+          }
+        },
+        "type": "Categorical",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "f",
+              "Entity": "fct_department_quality",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "f"
+                          }
+                        },
+                        "Property": "annee_deces"
+                      }
+                    }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "2025L"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User"
+      },
+      {
+        "name": "0910c1ae6b70d3039707",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fct_department_quality"
+              }
+            },
+            "Property": "delai_median_jours"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "0b310245e73b1bb0a226",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fct_department_quality"
+              }
+            },
+            "Property": "part_connue_30_jours_pct"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "b308cdfd9b04e200d0eb",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fct_department_quality"
+              }
+            },
+            "Property": "part_connue_90_jours_pct"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

@@ -40,8 +40,12 @@ median delay falls between 26 and 30 days (`department_extremes`). The
 real gaps are overseas - the Pacific collectivities (place codes in 98)
 show a 44-day median with 85.7% of deaths known at 90 days, and French
 Guiana (973) closes at 98.1%. Registration speed reads as a property of
-the national pipeline rather than of local offices - the Power BI map
-built on `fct_department_quality` makes that visible.
+the national pipeline rather than of local offices - the Power BI report
+built on `fct_department_quality` (docs/bi) makes that visible. The
+same ranking surfaces one more finding - deaths of French citizens
+abroad, transcribed by consulates, reach the register far more
+slowly, a 94-day median in 2025 with under half known at 90 days,
+consistent with the perimeter gap measured against the Insee series.
 
 ## What the register corrects without saying so
 

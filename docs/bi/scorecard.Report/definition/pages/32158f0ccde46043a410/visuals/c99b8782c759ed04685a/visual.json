@@ -1,0 +1,96 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "name": "c99b8782c759ed04685a",
+  "position": {
+    "x": 1269.3009118541033,
+    "y": 121.09422492401215,
+    "z": 2,
+    "height": 246.56534954407294,
+    "width": 611.306990881459,
+    "tabOrder": 2
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_monthly_quality"
+                    }
+                  },
+                  "Property": "% known within 90 days"
+                }
+              },
+              "queryRef": "fct_monthly_quality.% known within 90 days",
+              "nativeQueryRef": "% known within 90 days"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_monthly_quality"
+                  }
+                },
+                "Property": "% known within 90 days"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "radius": {
+              "expr": {
+                "Literal": {
+                  "Value": "20D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "4a0cbbcee8ca90eca592",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fct_monthly_quality"
+              }
+            },
+            "Property": "% known within 90 days"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

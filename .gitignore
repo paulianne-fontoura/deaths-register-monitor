@@ -21,6 +21,7 @@ logs/
 .env
 # outil local
 Claude outputs/
+.pbi/
 Preparation_2027.xlsx
 _to_delete/
 probe-report.json
