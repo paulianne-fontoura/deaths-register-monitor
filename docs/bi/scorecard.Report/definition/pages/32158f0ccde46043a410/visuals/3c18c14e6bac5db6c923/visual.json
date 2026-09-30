@@ -1,0 +1,132 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "name": "3c18c14e6bac5db6c923",
+  "position": {
+    "x": 40.851063829787236,
+    "y": 412.88753799392094,
+    "z": 3,
+    "height": 622.97872340425533,
+    "width": 1839.7568389057751,
+    "tabOrder": 3
+  },
+  "visual": {
+    "visualType": "lineChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_monthly_quality"
+                    }
+                  },
+                  "Property": "mois_deces"
+                }
+              },
+              "queryRef": "fct_monthly_quality.mois_deces",
+              "nativeQueryRef": "mois_deces",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Aggregation": {
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "fct_monthly_quality"
+                        }
+                      },
+                      "Property": "delai_median_jours"
+                    }
+                  },
+                  "Function": 1
+                }
+              },
+              "queryRef": "Avg(fct_monthly_quality.delai_median_jours)",
+              "nativeQueryRef": "Moyenne de delai_median_jours"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_monthly_quality"
+                  }
+                },
+                "Property": "mois_deces"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Median registration delay (days)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "251d4ed84c1340c2c583",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fct_monthly_quality"
+              }
+            },
+            "Property": "mois_deces"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "25f4ec6e0ad52e0bc703",
+        "field": {
+          "Aggregation": {
+            "Expression": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_monthly_quality"
+                  }
+                },
+                "Property": "delai_median_jours"
+              }
+            },
+            "Function": 1
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

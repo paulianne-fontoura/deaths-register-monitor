@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "name": "241ffcee10905e904853",
+  "position": {
+    "x": 653.61702127659578,
+    "y": 59.817629179331306,
+    "z": 5,
+    "height": 35.015197568389056,
+    "width": 577.75075987841944,
+    "tabOrder": 5
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Observable window - Oct 2024 to Jun 2026 - 1.16M deaths"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
