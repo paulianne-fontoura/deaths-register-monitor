@@ -3,7 +3,8 @@ name: Weekly probe
 # Sonde hebdomadaire (ADR-009, etape 11). Le lundi a 06h23 UTC et a la
 # demande. Verifie seulement si une livraison est parue ou a ete republiee
 # sur data.gouv - elle ouvre l'issue de capture des la semaine ou un
-# fichier parait, sans attendre le run mensuel. Elle peut signaler un
+# fichier parait, sans attendre le run mensuel, et applique le controle
+# SLA de capture (docs/sla.md). Elle peut signaler un
 # incident (API en panne) mais ne ferme jamais les incidents - seul un run
 # mensuel vert prouve que le pipeline entier est retabli.
 
@@ -40,8 +41,18 @@ jobs:
           uv run drm probe --json probe-report.json
           echo "new_count=$(jq '.new_deliveries | length' probe-report.json)" >> "$GITHUB_OUTPUT"
 
+      - name: Controle SLA de capture
+        run: |
+          limit=$(date -d '30 days ago' +%F)
+          breaches=$(jq --arg limit "$limit" '[.new_deliveries[] | select(.published_at != null and .published_at < $limit)] | length' probe-report.json)
+          if [ "$breaches" != "0" ]; then
+            echo "SLA de capture depasse - $breaches livraison(s) en attente depuis plus de 30 jours (docs/sla.md, runbook 01)"
+            exit 1
+          fi
+          echo "SLA de capture respecte"
+
       - name: Issue de capture
-        if: steps.probe.outputs.new_count != '0'
+        if: always() && steps.probe.outputs.new_count != '' && steps.probe.outputs.new_count != '0'
         run: |
           gh label create capture --force --color D93F0B --description "Livraison data.gouv a capturer"
           {
@@ -74,7 +85,7 @@ jobs:
             echo "La sonde hebdomadaire a echoue."
             echo
             echo "Run - ${RUN_URL}"
-            echo "Diagnostic - docs/design/adr/009-exploitation.md (runbooks detailles a l'etape 12)"
+            echo "Diagnostic - docs/failure-modes.md, puis le runbook du mode concerne dans docs/runbooks/"
             echo
             echo "Fermee automatiquement au prochain run mensuel vert."
           } > incident-body.md
