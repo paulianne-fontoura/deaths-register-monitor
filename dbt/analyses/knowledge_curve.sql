@@ -4,6 +4,9 @@
 -- change the date to read another month. Run with dbt show --inline or
 -- any DuckDB client on the compiled code.
 
+-- DuckDB analysis; on BigQuery, read pub_completeness_triangle (ADR-010).
+{{ config(enabled=target.type == 'duckdb') }}
+
 select
     mois_deces,
     published_at,

@@ -16,17 +16,39 @@ model-paths: ["models"]
 target-path: target
 clean-targets: [target, dbt_packages]
 
+# Two engines, one project (ADR-010). DuckDB builds everything from the
+# nominative register on the local workstation; BigQuery only receives
+# the published aggregates and builds the partitioned serving layer.
 models:
   drm:
     staging:
+      +enabled: "{{ target.type == 'duckdb' }}"
       +materialized: view
       +schema: staging
     intermediate:
+      +enabled: "{{ target.type == 'duckdb' }}"
       +materialized: view
       +schema: intermediate
+    marts:
+      +enabled: "{{ target.type == 'duckdb' }}"
+    published:
+      +enabled: "{{ target.type == 'bigquery' }}"
+      +materialized: table
+      +schema: published
+
+sources:
+  drm:
+    +enabled: "{{ target.type == 'duckdb' }}"
+    published:
+      +enabled: "{{ target.type == 'bigquery' }}"
+
+snapshots:
+  drm:
+    +enabled: "{{ target.type == 'duckdb' }}"
 
 seeds:
   drm:
+    +enabled: "{{ target.type == 'duckdb' }}"
     geo_exceptions:
       # varchar keeps the leading zeros ('00000' must not become 0)
       +column_types:

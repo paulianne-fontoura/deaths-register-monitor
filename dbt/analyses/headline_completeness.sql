@@ -8,6 +8,9 @@
 -- than 120 days are excluded - their 90-day share is right-censored.
 -- Run with scripts/run_analysis.py after dbt compile.
 
+-- DuckDB analysis; its BigQuery twin is a pub_ model (ADR-010).
+{{ config(enabled=target.type == 'duckdb') }}
+
 select
     case
         when mois_deces >= date '2024-10-01'
