@@ -45,3 +45,9 @@
   dated live drill, and a service-level document (docs/sla.md).
 - Capture SLA (30 days) enforced by the scheduled runs; incident issues
   now point at the failure-mode inventory and runbooks.
+- Scorecard (etape 13): fct_department_quality aggregate mart under an
+  enforced contract, committed analysis queries with a read-only runner,
+  BI export script, and an English scorecard (docs/scorecard.md) with a
+  committed figure. Headline on the observable window: 99.2% of deaths
+  reach the public register within 90 days, 60.2% within 30; the archive
+  era shows why continuous capture matters.
