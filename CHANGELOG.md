@@ -41,3 +41,7 @@
   deliberate-failure input for testing the alert path.
 - drm probe command comparing the data.gouv deliveries with the capture
   manifest; the manifest (metadata only) is now tracked in git.
+- Reliability pack: failure-mode inventory, four runbooks each closed by a
+  dated live drill, and a service-level document (docs/sla.md).
+- Capture SLA (30 days) enforced by the scheduled runs; incident issues
+  now point at the failure-mode inventory and runbooks.

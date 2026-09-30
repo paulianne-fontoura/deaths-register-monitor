@@ -3,8 +3,9 @@ name: Monthly
 # Run mensuel d'exploitation (ADR-009, etape 11). Le 5 de chaque mois a
 # 06h17 UTC (minute decalee - GitHub retarde les crons a l'heure pile) et a
 # la demande. Sonde data.gouv, controle du pipeline sur fixtures, docs
-# statiques, artefacts, alerte par issue. Aucune donnee nominative ne
-# transite ici - l'entrepot de reference vit sur le poste local.
+# statiques, artefacts, alerte par issue, controle du SLA de capture
+# (docs/sla.md, 30 jours). Aucune donnee nominative ne transite ici -
+# l'entrepot de reference vit sur le poste local.
 
 on:
   schedule:
@@ -44,6 +45,16 @@ jobs:
           uv run drm probe --json probe-report.json
           echo "new_count=$(jq '.new_deliveries | length' probe-report.json)" >> "$GITHUB_OUTPUT"
 
+      - name: Controle SLA de capture
+        run: |
+          limit=$(date -d '30 days ago' +%F)
+          breaches=$(jq --arg limit "$limit" '[.new_deliveries[] | select(.published_at != null and .published_at < $limit)] | length' probe-report.json)
+          if [ "$breaches" != "0" ]; then
+            echo "SLA de capture depasse - $breaches livraison(s) en attente depuis plus de 30 jours (docs/sla.md, runbook 01)"
+            exit 1
+          fi
+          echo "SLA de capture respecte"
+
       - name: Echec simule (test de l'alerte)
         if: inputs.simulate_failure
         run: |
@@ -70,7 +81,7 @@ jobs:
           retention-days: 90
 
       - name: Issue de capture
-        if: steps.probe.outputs.new_count != '0'
+        if: always() && steps.probe.outputs.new_count != '' && steps.probe.outputs.new_count != '0'
         run: |
           gh label create capture --force --color D93F0B --description "Livraison data.gouv a capturer"
           {
@@ -110,7 +121,7 @@ jobs:
             echo "Le run planifie a echoue."
             echo
             echo "Run - ${RUN_URL}"
-            echo "Diagnostic - docs/design/adr/009-exploitation.md (runbooks detailles a l'etape 12)"
+            echo "Diagnostic - docs/failure-modes.md, puis le runbook du mode concerne dans docs/runbooks/"
             echo
             echo "Fermee automatiquement au prochain run mensuel vert."
           } > incident-body.md
