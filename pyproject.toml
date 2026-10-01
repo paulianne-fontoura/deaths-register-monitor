@@ -25,10 +25,23 @@ requires = ["uv_build>=0.11.4,<0.12.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
+bq = [
+    "dbt-bigquery>=1.12.1",
+    "google-cloud-bigquery>=3.45.2",
+]
 dev = [
     "pre-commit>=4.6.2",
     "pytest>=9.1.1",
     "pytest-httpx>=0.36.2",
     "ruff>=0.16.7",
     "sqlfluff>=4.3.0",
+]
+
+# The project is developed on Windows and checked in CI on Linux - uv
+# must only pick versions that ship wheels for both (a fresh release of
+# cryptography once had Linux and macOS wheels only).
+[tool.uv]
+required-environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]

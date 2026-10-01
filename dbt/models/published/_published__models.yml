@@ -1,0 +1,191 @@
+version: 2
+
+models:
+  - name: pub_monthly_quality
+    description: >
+      Monthly register quality on BigQuery, integer-range partitioned on
+      the month index, clustered on the death month. Published aggregate
+      only (ADR-010).
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: mois_index
+        description: >
+          Months since January 1960 (partitioning column, integer range -
+          date partitions would expire on creation in the sandbox).
+        data_type: int64
+      - name: mois_deces
+        description: Death month (first day), clustering column.
+        data_type: date
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+      - name: n_deces
+        description: Canonical deaths of the month.
+        data_type: int64
+      - name: delai_median_jours
+        description: Median days between death and first publication.
+        data_type: int64
+      - name: n_connus_30_jours
+        description: Deaths published within 30 days.
+        data_type: int64
+      - name: n_connus_90_jours
+        description: Deaths published within 90 days.
+        data_type: int64
+      - name: part_connue_30_jours
+        description: Share published within 30 days, SAFE_DIVIDE (null if empty).
+        data_type: float64
+      - name: part_connue_90_jours
+        description: Share published within 90 days, SAFE_DIVIDE (null if empty).
+        data_type: float64
+      - name: n_lignes_repliees
+        description: Source rows beyond one per death.
+        data_type: int64
+      - name: n_deces_corriges
+        description: Deaths whose content changed between deliveries.
+        data_type: int64
+      - name: _exported_at
+        description: Export timestamp from the workstation, UTC (drm publish).
+        data_type: timestamp
+
+  - name: pub_completeness_triangle
+    description: >
+      Completeness triangle on BigQuery, integer-range partitioned on the
+      month index, clustered by death month and knowledge point. Published
+      aggregate only (ADR-010).
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: mois_index
+        description: >
+          Months since January 1960 (partitioning column, integer range -
+          date partitions would expire on creation in the sandbox).
+        data_type: int64
+      - name: triangle_id
+        description: Death month and knowledge point, unique.
+        data_type: string
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+      - name: mois_deces
+        description: Death month, first clustering column.
+        data_type: date
+      - name: published_at
+        description: Knowledge point (data.gouv upload date), second clustering column.
+        data_type: date
+      - name: delai_mois
+        description: Months between death month and knowledge point.
+        data_type: int64
+      - name: n_connus
+        description: Deaths of the month known at that point.
+        data_type: int64
+      - name: n_total_courant
+        description: Deaths of the month known today.
+        data_type: int64
+      - name: part_connue
+        description: Share known at that point, in ]0, 1].
+        data_type: float64
+      - name: _exported_at
+        description: Export timestamp from the workstation, UTC.
+        data_type: timestamp
+
+  - name: pub_department_quality
+    description: >
+      Register quality by department and year on BigQuery, integer-range
+      partitioned on the year and clustered on the department.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: departement
+        description: Department code, or etranger / inconnu.
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: annee_deces
+        description: Death year, partitioning column.
+        data_type: int64
+        constraints:
+          - type: not_null
+      - name: n_deces
+        description: Canonical deaths.
+        data_type: int64
+      - name: delai_median_jours
+        description: Median days between death and first publication.
+        data_type: int64
+      - name: part_connue_30_jours_pct
+        description: Share published within 30 days, percent.
+        data_type: float64
+      - name: part_connue_90_jours_pct
+        description: Share published within 90 days, percent.
+        data_type: float64
+      - name: _exported_at
+        description: Export timestamp from the workstation, UTC.
+        data_type: timestamp
+
+  - name: pub_reconciliation
+    description: Yearly reconciliation on BigQuery, not partitioned (139 rows).
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: annee
+        description: Death year.
+        data_type: int64
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+      - name: deces_registre
+        description: Canonical deaths in the register.
+        data_type: int64
+      - name: deces_insee
+        description: Insee official series.
+        data_type: int64
+      - name: ecart_insee_pct
+        description: Gap to Insee, percent.
+        data_type: float64
+      - name: champ_insee
+        description: Insee perimeter.
+        data_type: string
+      - name: statut_insee
+        description: Provisional or definitive.
+        data_type: string
+      - name: exception_motif
+        description: Documented exception, when any.
+        data_type: string
+      - name: deces_cepidc
+        description: CepiDc yearly count.
+        data_type: int64
+      - name: ecart_cepidc_pct
+        description: Gap to CepiDc, percent.
+        data_type: float64
+      - name: _exported_at
+        description: Export timestamp from the workstation, UTC.
+        data_type: timestamp
+
+  - name: pub_headline
+    description: >
+      Headline figures computed by BigQuery, twin of the DuckDB analysis
+      headline_completeness - both engines must agree to the digit.
+    columns:
+      - name: era
+        description: Knowledge era (observable window or archive).
+        data_tests:
+          - not_null
+          - unique
+
+  - name: pub_department_extremes
+    description: >
+      Five fastest and five slowest departments in 2025, BigQuery twin of
+      the DuckDB analysis department_extremes (QUALIFY).
+    columns:
+      - name: departement
+        description: Department code.
+        data_tests:
+          - not_null
+          - unique

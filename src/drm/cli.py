@@ -1,17 +1,20 @@
 """deaths-register-monitor command line interface."""
 
 import json
+import os
 import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
+import duckdb
 import httpx
 import typer
 
 from drm import cog as cog_module
 from drm import download, manifest, registry, validate, warehouse
 from drm import parse as parse_module
+from drm import publish as publish_module
 from drm.config import RECORD_LENGTH, Settings
 
 app = typer.Typer(no_args_is_help=True, help="deaths-register-monitor - ingestion CLI")
@@ -263,6 +266,47 @@ def probe(
             json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )
         typer.echo(f"report:   {json_path}")
+
+
+@app.command()
+def publish(
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Export and check the marts, load nothing."),
+    ] = False,
+) -> None:
+    """Publish the aggregate marts to the BigQuery sandbox (ADR-010).
+
+    Exports the allowlisted aggregate marts to parquet, refusing any
+    nominative column, then loads them into the drm_exports dataset. The
+    load needs the bq dependency group and the DBT_BQ_PROJECT and
+    DRM_BQ_KEYFILE environment variables; --dry-run needs neither.
+    """
+    settings = Settings()
+    con = duckdb.connect(str(settings.warehouse_path), read_only=True)
+    files = publish_module.export_marts(
+        con, settings.data_dir / "exports", publish_module.PUBLISHABLE_MARTS
+    )
+    con.close()
+    for mart, path, rows in files:
+        typer.echo(f"exported: {mart} ({rows} rows) -> {path}")
+    if dry_run:
+        typer.echo("dry-run:  nothing loaded")
+        return
+    project = os.environ.get("DBT_BQ_PROJECT")
+    keyfile = os.environ.get("DRM_BQ_KEYFILE")
+    if not project or not keyfile:
+        raise typer.BadParameter("set DBT_BQ_PROJECT and DRM_BQ_KEYFILE first")
+    # imported here, not at module level - the bq dependency group is optional
+    from google.cloud import bigquery
+    from google.oauth2 import service_account
+
+    credentials = service_account.Credentials.from_service_account_file(keyfile)
+    client = bigquery.Client(
+        project=project, credentials=credentials, location=publish_module.LOCATION
+    )
+    for table_id, rows in publish_module.load_to_bigquery(client, bigquery, files):
+        typer.echo(f"loaded:   {table_id} ({rows} rows)")
 
 
 @app.command()

@@ -5,6 +5,9 @@
 -- etranger / inconnu buckets are excluded so the ranking compares
 -- comparable processes. Run with scripts/run_analysis.py.
 
+-- DuckDB analysis; its BigQuery twin is a pub_ model (ADR-010).
+{{ config(enabled=target.type == 'duckdb') }}
+
 with classement as (
 
     select

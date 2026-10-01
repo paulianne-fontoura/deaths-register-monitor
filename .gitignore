@@ -25,3 +25,7 @@ Claude outputs/
 Preparation_2027.xlsx
 _to_delete/
 probe-report.json
+
+# cles de compte de service - jamais versionnees (ADR-010)
+*service-account*.json
+drm-bq*.json

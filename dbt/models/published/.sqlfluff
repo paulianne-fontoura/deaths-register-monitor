@@ -1,0 +1,3 @@
+# The serving layer is BigQuery SQL (ADR-010); lint it in that dialect.
+[sqlfluff]
+dialect = bigquery

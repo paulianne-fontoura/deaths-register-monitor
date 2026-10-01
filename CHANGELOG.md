@@ -56,3 +56,7 @@
   ranking on the exported aggregates; map visuals are tenant-disabled,
   the ranking replaces them and surfaces the slow consular
   transcriptions (94-day median abroad in 2025).
+- BigQuery second target (ADR-010): the same dbt project builds everything
+  on DuckDB and only a partitioned serving layer on the BigQuery sandbox;
+  drm publish exports allowlisted aggregate marts with a nominative-column
+  guard and loads them with load jobs; cost measured by scripts/measure_cost.py.
