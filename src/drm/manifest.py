@@ -5,7 +5,7 @@ final path and timestamp. The manifest is the memory that makes reruns safe.
 """
 
 import json
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 
 def load(path: Path) -> list[dict]:
@@ -13,6 +13,15 @@ def load(path: Path) -> list[dict]:
         return []
     with open(path, encoding="utf-8") as handle:
         return [json.loads(line) for line in handle if line.strip()]
+
+
+def local_path(entry: dict) -> Path:
+    """The entry's raw file on this machine, whichever system wrote the line.
+
+    The manifest is versioned (ADR-009) and written on Windows, so stored
+    paths may carry backslashes. Both separators are read as separators.
+    """
+    return Path(PureWindowsPath(entry["path"]).as_posix())
 
 
 def append(path: Path, entry: dict) -> None:

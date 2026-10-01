@@ -45,3 +45,7 @@ required-environments = [
     "sys_platform == 'win32' and platform_machine == 'AMD64'",
     "sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]
+
+[tool.pytest.ini_options]
+# the project's tests only, never copies left in ignored local folders
+testpaths = ["tests"]

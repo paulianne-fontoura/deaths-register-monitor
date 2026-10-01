@@ -39,13 +39,20 @@ def _download_resource(
         client, resource["url"], settings.raw_dir
     )
     if manifest.seen(entries, resource["title"], sha256):
-        temp_path.unlink()
         existing = next(
             entry
             for entry in entries
             if entry.get("title") == resource["title"] and entry.get("sha256") == sha256
         )
-        return Path(existing["path"]), sha256, "unchanged", None
+        local = manifest.local_path(existing)
+        if local.exists():
+            temp_path.unlink()
+        else:
+            # content already captured, file absent here (fresh clone of the
+            # versioned manifest) - keep the download where the manifest says
+            local.parent.mkdir(parents=True, exist_ok=True)
+            temp_path.replace(local)
+        return local, sha256, "unchanged", None
     final_path = manifest.next_version_path(settings.raw_dir, resource["title"])
     temp_path.replace(final_path)
     stats = validate.check_fixed_width(final_path)
@@ -167,7 +174,8 @@ def backfill(
             entries = manifest.load(settings.manifest_path)
             for resource in plan:
                 known = manifest.latest(entries, resource["title"])
-                state = "in manifest" if known else "to download"
+                present = known and manifest.local_path(known).exists()
+                state = "in manifest" if present else "to download"
                 typer.echo(f"  {resource['title']}  [{state}]")
             typer.echo("dry-run: nothing downloaded")
             return
@@ -179,8 +187,8 @@ def backfill(
             try:
                 entries = manifest.load(settings.manifest_path)
                 known = manifest.latest(entries, resource["title"])
-                if known and Path(known["path"]).exists():
-                    raw_path, sha256 = Path(known["path"]), known["sha256"]
+                if known and manifest.local_path(known).exists():
+                    raw_path, sha256 = manifest.local_path(known), known["sha256"]
                     origin = "manifest"
                 else:
                     period = registry.title_to_period(resource["title"])
@@ -320,7 +328,11 @@ def parse(
     settings = Settings()
     entries = manifest.load(settings.manifest_path)
     file_hash = next(
-        (e["sha256"] for e in entries if e.get("path") == str(raw_file)),
+        (
+            e["sha256"]
+            for e in entries
+            if e.get("path") and manifest.local_path(e) == raw_file
+        ),
         "unknown",
     )
     parquet_path, stats = _parse_raw(settings, raw_file, file_hash)

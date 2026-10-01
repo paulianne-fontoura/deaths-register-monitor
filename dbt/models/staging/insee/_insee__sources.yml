@@ -13,21 +13,24 @@ sources:
           Every row of every ingested delivery of the INSEE death register,
           exactly as published. Duplicate rows are kept on purpose (ADR-005);
           each file version is a distinct snapshot (ADR-003).
-        loaded_at_field: "cast(_ingested_at as timestamp)"
-        freshness:
-          warn_after: {count: 40, period: day}
-          error_after: {count: 75, period: day}
+        config:
+          loaded_at_field: "cast(_ingested_at as timestamp)"
+          freshness:
+            warn_after: {count: 40, period: day}
+            error_after: {count: 75, period: day}
       - name: load_log
         description: One line per file loaded into the warehouse, with volumes and timing.
-        loaded_at_field: "cast(loaded_at as timestamp)"
-        freshness:
-          warn_after: {count: 40, period: day}
-          error_after: {count: 75, period: day}
+        config:
+          loaded_at_field: "cast(loaded_at as timestamp)"
+          freshness:
+            warn_after: {count: 40, period: day}
+            error_after: {count: 75, period: day}
       - name: manifest
         description: >
           Download manifest of the pipeline (append-only, ADR-003). One line
           per fetched file with its period, versioned data.gouv url, sha256
           and volumes. The knowledge axis of the bitemporal marts comes from
           the upload date embedded in the url (ADR-008).
-        meta:
-          external_location: "read_json('{{ 'tests/fixtures/manifest-fixture.jsonl' if target.name == 'ci' else 'data/manifest.jsonl' }}', format='newline_delimited')"
+        config:
+          meta:
+            external_location: "read_json('{{ 'tests/fixtures/manifest-fixture.jsonl' if target.name == 'ci' else 'data/manifest.jsonl' }}', format='newline_delimited')"
