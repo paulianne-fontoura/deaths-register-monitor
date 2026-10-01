@@ -60,3 +60,17 @@
   on DuckDB and only a partitioned serving layer on the BigQuery sandbox;
   drm publish exports allowlisted aggregate marts with a nominative-column
   guard and loads them with load jobs; cost measured by scripts/measure_cost.py.
+- README v1 in English: problem, audience, architecture, data model with
+  grains, quality checks with their real findings, operations, run
+  instructions, decisions and limits.
+- make demo (scripts/demo.py): the whole pipeline on the synthetic
+  fixtures, offline, ending with what the checks caught.
+
+### Fixed
+- A fresh clone could not rebuild the raw layer: the versioned manifest
+  stores Windows paths, so already-captured deliveries were reported as
+  present and then failed to parse. Manifest paths are now read portably,
+  and a re-downloaded file with known content is kept where the manifest
+  points, without a new manifest line (drm backfill, drm ingest, drm cog).
+- dbt source properties moved under config (PropertyMovedToConfigDeprecation).
+- pytest collects tests/ only (testpaths), never copies in ignored local folders.

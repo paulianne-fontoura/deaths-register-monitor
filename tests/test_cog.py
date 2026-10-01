@@ -73,3 +73,28 @@ def test_republished_file_replaces_and_keeps_history(httpx_mock, tmp_path, monke
         (tmp_path / "data" / "manifest.jsonl").read_text().strip().splitlines()
     )
     assert len(manifest_lines) == 2 * len(COG_FILES)  # history kept
+
+
+def test_fresh_clone_restores_files_without_new_history(
+    httpx_mock, tmp_path, monkeypatch
+):
+    # Same as a fresh clone: the versioned manifest knows the content, the
+    # reference files are absent. They are written back, the history is not
+    # duplicated.
+    monkeypatch.chdir(tmp_path)
+    mock_all_files(httpx_mock)
+    runner.invoke(app, ["cog"])
+    cog_dir = tmp_path / "data" / "reference" / "cog"
+    for name in COG_FILES:
+        (cog_dir / name).unlink()
+
+    mock_all_files(httpx_mock)
+    result = runner.invoke(app, ["cog"])
+
+    assert result.exit_code == 0
+    for name in COG_FILES:
+        assert (cog_dir / name).exists()
+    manifest_lines = (
+        (tmp_path / "data" / "manifest.jsonl").read_text().strip().splitlines()
+    )
+    assert len(manifest_lines) == len(COG_FILES)

@@ -42,8 +42,13 @@ def download_cog(client: httpx.Client, settings: Settings) -> list[tuple[str, st
         url = COG_BASE_URL + name
         temp_path, sha256, size = download.fetch_to_temp(client, url, target_dir)
         final_path = target_dir / name
-        if manifest.seen(entries, name, sha256) and final_path.exists():
-            temp_path.unlink()
+        if manifest.seen(entries, name, sha256):
+            if final_path.exists():
+                temp_path.unlink()
+            else:
+                # known content, file absent here (fresh clone of the
+                # versioned manifest) - restore it, the history is complete
+                temp_path.replace(final_path)
             results.append((name, "unchanged"))
             continue
         temp_path.replace(final_path)

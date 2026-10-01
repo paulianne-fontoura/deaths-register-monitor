@@ -1,5 +1,5 @@
 .RECIPEPREFIX := >
-.PHONY: setup lint test ingest backfill cog dbt-build dbt-run dbt-test freshness dbt-ci docs
+.PHONY: setup lint test ingest backfill cog dbt-build dbt-run dbt-test freshness dbt-ci docs demo
 
 MONTH ?= 2026-08
 DBT_ARGS = --project-dir dbt --profiles-dir dbt
@@ -42,3 +42,6 @@ dbt-ci:
 
 docs:
 > uv run dbt docs generate $(DBT_ARGS) --static
+
+demo:
+> uv run python scripts/demo.py

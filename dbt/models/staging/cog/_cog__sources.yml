@@ -11,21 +11,26 @@ sources:
     tables:
       - name: commune_depuis_1943
         description: Every commune and municipal arrondissement since 1943, with validity dates.
-        meta:
-          external_location: "read_csv('{{ 'tests/fixtures/cog' if target.name == 'ci' else 'data/reference/cog' }}/v_commune_depuis_1943.csv', header=true, all_varchar=true)"
+        config:
+          meta:
+            external_location: "read_csv('{{ 'tests/fixtures/cog' if target.name == 'ci' else 'data/reference/cog' }}/v_commune_depuis_1943.csv', header=true, all_varchar=true)"
       - name: commune_outremer_depuis_1943
         description: Overseas and former-territory communes since 1943 (Algeria included).
-        meta:
-          external_location: "read_csv('{{ 'tests/fixtures/cog' if target.name == 'ci' else 'data/reference/cog' }}/v_commune_outremer_depuis_1943.csv', header=true, all_varchar=true)"
+        config:
+          meta:
+            external_location: "read_csv('{{ 'tests/fixtures/cog' if target.name == 'ci' else 'data/reference/cog' }}/v_commune_outremer_depuis_1943.csv', header=true, all_varchar=true)"
       - name: tom_depuis_1943
         description: Overseas territories since 1943.
-        meta:
-          external_location: "read_csv('{{ 'tests/fixtures/cog' if target.name == 'ci' else 'data/reference/cog' }}/v_tom_depuis_1943.csv', header=true, all_varchar=true)"
+        config:
+          meta:
+            external_location: "read_csv('{{ 'tests/fixtures/cog' if target.name == 'ci' else 'data/reference/cog' }}/v_tom_depuis_1943.csv', header=true, all_varchar=true)"
       - name: pays_et_territoire_depuis_1943
         description: Countries and territories since 1943, with validity dates.
-        meta:
-          external_location: "read_csv('{{ 'tests/fixtures/cog' if target.name == 'ci' else 'data/reference/cog' }}/v_pays_et_territoire_depuis_1943.csv', header=true, all_varchar=true)"
+        config:
+          meta:
+            external_location: "read_csv('{{ 'tests/fixtures/cog' if target.name == 'ci' else 'data/reference/cog' }}/v_pays_et_territoire_depuis_1943.csv', header=true, all_varchar=true)"
       - name: commune_2026
         description: Communes of the current millesime, with departement and region.
-        meta:
-          external_location: "read_csv('{{ 'tests/fixtures/cog' if target.name == 'ci' else 'data/reference/cog' }}/v_commune_2026.csv', header=true, all_varchar=true)"
+        config:
+          meta:
+            external_location: "read_csv('{{ 'tests/fixtures/cog' if target.name == 'ci' else 'data/reference/cog' }}/v_commune_2026.csv', header=true, all_varchar=true)"

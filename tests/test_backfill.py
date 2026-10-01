@@ -1,5 +1,6 @@
 """Backfill tests: plan, full load, resume, range, failure isolation."""
 
+import hashlib
 import json
 
 import httpx
@@ -143,3 +144,40 @@ def test_all_deliveries_plans_monthly_overlaps(httpx_mock, tmp_path, monkeypatch
     assert result.output.index("deces-1970.txt") < result.output.index(
         "deces-1970-m01.txt"
     )
+
+
+def test_fresh_clone_of_the_versioned_manifest(httpx_mock, tmp_path, monkeypatch):
+    # The manifest is tracked in git (ADR-009) and written on Windows. On a
+    # fresh clone its entries point at raw files that are not there - the
+    # backfill must download them, keep them where the manifest says, load
+    # them, and leave the shared manifest untouched.
+    monkeypatch.chdir(tmp_path)
+    settings = Settings()
+    settings.manifest_path.parent.mkdir(parents=True)
+    captured = [
+        ("1970", "deces-1970.txt", URL_1970, CONTENT_1970),
+        ("1971", "deces-1971.txt", URL_1971, CONTENT_1971),
+        ("2026-01", "deces-2026-m01.txt", URL_M01, CONTENT_M01),
+    ]
+    lines = [
+        json.dumps(
+            {
+                "period": period,
+                "title": title,
+                "url": url,
+                "path": f"data\\raw\\{title}",
+                "sha256": hashlib.sha256(content).hexdigest(),
+            }
+        )
+        for period, title, url, content in captured
+    ]
+    settings.manifest_path.write_text("\n".join(lines) + "\n")
+    mock_all(httpx_mock)
+
+    result = runner.invoke(app, ["backfill", "deaths"])
+
+    assert result.exit_code == 0, result.output
+    assert (settings.raw_dir / "deces-1970.txt").read_bytes() == CONTENT_1970
+    assert settings.manifest_path.read_text().strip().splitlines() == lines
+    con = warehouse.connect(settings.warehouse_path)
+    assert warehouse.count_rows(con) == 6
