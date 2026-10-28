@@ -28,7 +28,7 @@ Séance du 12 septembre 2026. DuckDB 1.5.5, fichiers du 8 septembre 2026.
 
 3\. Anomalie d'intégrité : 1 décès daté du 23/12/2026 dans le fichier annuel 2025 (date
 
-&#x20;  future ; commune 95527, acte n° 47) -> test à implémenter : date\_deces <= date de
+&#x20;  future) -> test à implémenter : date\_deces <= date de
 
 &#x20;  publication du fichier.
 

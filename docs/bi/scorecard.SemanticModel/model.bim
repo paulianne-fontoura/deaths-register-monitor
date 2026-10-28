@@ -21,6 +21,19 @@
       "returnErrorValuesAsNull": true
     },
     "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "expressions": [
+      {
+        "name": "DossierExports",
+        "kind": "m",
+        "expression": "\"C:\\chemin\\vers\\deaths-register-monitor\\data\\exports\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ]
+      }
+    ],
     "relationships": [
       {
         "name": "36226891-54fc-4d4e-9c44-1bc560f7af1c",
@@ -120,7 +133,7 @@
             "source": {
               "expression": [
                 "let",
-                "    Source = Csv.Document(File.Contents(\"C:\\Users\\pfontoura\\Downloads\\deaths-register-monitor\\data\\exports\\fct_monthly_quality.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+                "    Source = Csv.Document(File.Contents(DossierExports & \"\\fct_monthly_quality.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
                 "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
                 "    ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{\"mois_deces\", type date}, {\"n_deces\", Int64.Type}, {\"delai_median_jours\", Int64.Type}, {\"n_connus_30_jours\", Int64.Type}, {\"n_connus_90_jours\", Int64.Type}, {\"n_lignes_repliees\", Int64.Type}, {\"n_deces_corriges\", Int64.Type}}, \"en-US\")",
                 "in",
@@ -207,7 +220,7 @@
             "source": {
               "expression": [
                 "let",
-                "    Source = Csv.Document(File.Contents(\"C:\\Users\\pfontoura\\Downloads\\deaths-register-monitor\\data\\exports\\fct_completeness_triangle.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+                "    Source = Csv.Document(File.Contents(DossierExports & \"\\fct_completeness_triangle.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
                 "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
                 "    ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{\"triangle_id\", type text}, {\"mois_deces\", type date}, {\"published_at\", type date}, {\"delai_mois\", Int64.Type}, {\"n_connus\", Int64.Type}, {\"n_total_courant\", Int64.Type}, {\"part_connue\", type number}}, \"en-US\")",
                 "in",
@@ -272,7 +285,7 @@
             "source": {
               "expression": [
                 "let",
-                "    Source = Csv.Document(File.Contents(\"C:\\Users\\pfontoura\\Downloads\\deaths-register-monitor\\data\\exports\\fct_department_quality.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+                "    Source = Csv.Document(File.Contents(DossierExports & \"\\fct_department_quality.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
                 "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
                 "    ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{\"departement\", type text}, {\"annee_deces\", Int64.Type}, {\"n_deces\", Int64.Type}, {\"delai_median_jours\", Int64.Type}, {\"part_connue_30_jours_pct\", type number}, {\"part_connue_90_jours_pct\", type number}}, \"en-US\")",
                 "in",
@@ -358,7 +371,7 @@
             "source": {
               "expression": [
                 "let",
-                "    Source = Csv.Document(File.Contents(\"C:\\Users\\pfontoura\\Downloads\\deaths-register-monitor\\data\\exports\\qa_reconciliation.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+                "    Source = Csv.Document(File.Contents(DossierExports & \"\\qa_reconciliation.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
                 "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
                 "    ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{\"annee\", Int64.Type}, {\"deces_registre\", Int64.Type}, {\"deces_insee\", Int64.Type}, {\"ecart_insee_pct\", type number}, {\"champ_insee\", type text}, {\"statut_insee\", type text}, {\"exception_motif\", type text}, {\"deces_cepidc\", Int64.Type}, {\"ecart_cepidc_pct\", type number}}, \"en-US\")",
                 "in",
@@ -410,7 +423,7 @@
             "source": {
               "expression": [
                 "let",
-                "    Source = Csv.Document(File.Contents(\"C:\\Users\\pfontoura\\Downloads\\deaths-register-monitor\\data\\exports\\departements.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+                "    Source = Csv.Document(File.Contents(DossierExports & \"\\departements.csv\"), [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
                 "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
                 "    ChangedType = Table.TransformColumnTypes(PromotedHeaders, {{\"code\", type text}, {\"nom\", type text}, {\"nom_carte\", type text}, {\"zone\", type text}}, \"en-US\")",
                 "in",

@@ -2,6 +2,19 @@
 
 ![CI](https://github.com/paulianne-fontoura/deaths-register-monitor/actions/workflows/ci.yml/badge.svg)
 
+> **En français.** Combien de temps faut-il pour qu'un décès apparaisse dans le
+> fichier des personnes décédées publié par l'Insee sur data.gouv.fr, et combien
+> ce fichier change-t-il après sa publication ? Le projet capture chaque
+> livraison mensuelle avant sa suppression, reconstruit le registre (30 millions
+> de lignes depuis 1970) sur deux axes de temps, celui du décès et celui de sa
+> publication, et le rapproche des séries officielles de l'Insee et des comptes
+> du CépiDc. Sur les 1 162 871 décès d'octobre 2024 à juin 2026, 99,2 % figurent
+> au fichier public dans les 90 jours et 60,2 % dans les 30 jours. Seuls des
+> agrégats sont publiés, aucune ligne nominative. Données de l'Insee sous
+> Licence Ouverte 2.0, code sous licence MIT. Le document de conception, les ADR
+> et les runbooks sont en français dans `docs/`, la suite de ce README est en
+> anglais.
+
 How long until a death is counted, and how much does a public register
 change after publication? A continuous quality audit of the French national
 death register - 30 million rows since 1970, captured every month, rebuilt
@@ -178,7 +191,10 @@ hours, most of it the download and the dbt build.
 
 Other analyses are `department_extremes` and `knowledge_curve`. The Power BI
 report is a versioned project in [docs/bi](docs/bi/), fed by
-`uv run python scripts/export_bi.py`.
+`uv run python scripts/export_bi.py`. Before refreshing it, set the
+`DossierExports` parameter to the absolute path of your local
+`data/exports` folder (Transform data, Edit parameters). That value
+stays on your machine - a pre-commit hook refuses any absolute user path.
 
 ## Decisions
 
@@ -226,6 +242,7 @@ every published figure is a count, a rate or a distribution. The project
 avoids any epidemiological or political reading - it measures a data
 pipeline. Source data by INSEE under Licence Ouverte 2.0, with thanks for
 opening it.
+Code under the MIT licence, see [LICENSE](LICENSE).
 
 The design document, ADRs, runbooks and project notes are written in
 French. This README and the scorecard are in English.

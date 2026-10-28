@@ -24,7 +24,7 @@ Le profilage a porté sur trois fichiers, le mensuel d'août 2026, l'annuel 2025
 
 1. Les arrivées tardives sont structurelles. 86,0 % des décès du fichier d'août 2026 sont survenus en août, 12,1 % en juillet et 0,9 % en juin. La queue s'étale sur 92 mois distincts et le décès le plus ancien date d'août 1927. Le décompte d'un mois se construit donc sur de nombreuses livraisons.
 2. Le fichier annuel 2025 contient 2,2 % de décès d'années antérieures, dont 12 804 de 2024, avec une queue jusqu'à 1935.
-3. Un décès du fichier annuel 2025 est daté du 23/12/2026, soit une date postérieure au fichier lui-même (commune 95527, acte n° 47).
+3. Un décès du fichier annuel 2025 est daté du 23/12/2026, soit une date postérieure au fichier lui-même.
 4. Les dates incomplètes sont codées « 00 ». Le fichier d'août en compte 209 côté naissance et 1 côté décès, l'annuel 2025 en compte 3 302 et 9, l'annuel 1970 en compte 0 et 5.
 5. Les doublons exacts apparaissent à la consolidation. Le mensuel n'en contient aucun, l'annuel 2025 en contient 76 paires. Les analyses d'icem7 en documentent environ 221 000 sur l'ensemble du registre.
 6. La couverture historique varie. Le fichier 1970 contient 27 006 lignes pour environ 540 000 décès réels, soit 5 % environ, conséquence du début de l'informatisation. La couverture sera documentée fichier par fichier.
