@@ -65,6 +65,9 @@
   instructions, decisions and limits.
 - make demo (scripts/demo.py): the whole pipeline on the synthetic
   fixtures, offline, ending with what the checks caught.
+- MIT licence and a French summary at the top of the README, ahead of the
+  repository going public as a reuse of the INSEE register on data.gouv.fr.
+- Pre-commit hook refusing absolute user paths in versioned files.
 
 ### Fixed
 - A fresh clone could not rebuild the raw layer: the versioned manifest
@@ -74,3 +77,7 @@
   points, without a new manifest line (drm backfill, drm ingest, drm cog).
 - dbt source properties moved under config (PropertyMovedToConfigDeprecation).
 - pytest collects tests/ only (testpaths), never copies in ignored local folders.
+- The Power BI model read its CSV exports from an absolute local path; it now
+  reads them through a DossierExports parameter.
+- The profiling notes and the design document no longer point at a single
+  register record, in line with the aggregates-only rule.

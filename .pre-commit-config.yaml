@@ -9,6 +9,10 @@ repos:
       - id: detect-private-key
   - repo: local
     hooks:
+      - id: no-user-paths
+        name: pas de chemin absolu d'utilisateur
+        entry: '(?i)[a-z]:(\\+|/)users(\\+|/)'
+        language: pygrep
       - id: ruff-check
         name: ruff check
         entry: uv run ruff check --fix
