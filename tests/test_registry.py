@@ -1,3 +1,5 @@
+from datetime import date
+
 import httpx
 import pytest
 
@@ -142,3 +144,66 @@ def test_probe_report_ignores_cog_manifest_entries():
     report = registry.probe_report(dataset, entries)
     assert report["new_deliveries"] == []
     assert report["vanished_captured"] == []
+
+
+def test_probe_report_capture_clock_survives_an_in_place_replacement():
+    """Incident of 2026-11-04 - the September monthly, first published on
+    5 October, was replaced in place on 16 October before any capture. The
+    clock starts at the first publication, not at the replacement."""
+    dataset = {
+        "resources": [
+            {
+                "title": "deces-2026-m09.txt",
+                "url": f"{VERSIONED}/20261016-061337/deces-2026-m09.txt",
+                "created_at": "2026-10-05T12:21:12.299000+00:00",
+            }
+        ]
+    }
+    report = registry.probe_report(dataset, [], today=date(2026, 11, 4))
+    pending = report["new_deliveries"][0]
+    assert pending["published_at"] == "2026-10-16"
+    assert pending["first_published_at"] == "2026-10-05"
+    assert pending["pending_since"] == "2026-10-05"
+    assert pending["replaced_before_capture"] is True
+    assert report["sla_capture_days"] == 7
+    assert report["sla_breaches"] == ["deces-2026-m09.txt"]
+
+
+def test_probe_report_sla_breaks_at_seven_days():
+    dataset = {
+        "resources": [
+            {
+                "title": "deces-2026-m10.txt",
+                "url": f"{VERSIONED}/20261105-080000/deces-2026-m10.txt",
+                "created_at": "2026-11-05T08:00:02+00:00",
+            }
+        ]
+    }
+    on_day_six = registry.probe_report(dataset, [], today=date(2026, 11, 11))
+    on_day_seven = registry.probe_report(dataset, [], today=date(2026, 11, 12))
+    assert on_day_six["sla_breaches"] == []
+    assert on_day_seven["sla_breaches"] == ["deces-2026-m10.txt"]
+    assert on_day_seven["new_deliveries"][0]["replaced_before_capture"] is False
+
+
+def test_probe_report_republication_of_a_captured_title_starts_a_new_clock():
+    """An annual file captured in April and reissued in November is a new
+    version to capture - its clock starts in November, not at the creation
+    of the resource months earlier."""
+    dataset = {
+        "resources": [
+            {
+                "title": "deces-2025.txt",
+                "url": f"{VERSIONED}/20261120-080000/d25.txt",
+                "created_at": "2026-04-10T10:10:12+00:00",
+            }
+        ]
+    }
+    entries = [
+        {"title": "deces-2025.txt", "url": f"{VERSIONED}/20260410-101010/d25.txt"},
+    ]
+    report = registry.probe_report(dataset, entries, today=date(2026, 11, 23))
+    pending = report["new_deliveries"][0]
+    assert pending["pending_since"] == "2026-11-20"
+    assert pending["replaced_before_capture"] is False
+    assert report["sla_breaches"] == []

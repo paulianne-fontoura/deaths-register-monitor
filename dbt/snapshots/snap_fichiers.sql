@@ -13,7 +13,9 @@
 -- raw layer keeps every version, the manifest keeps the history); this
 -- snapshot historises those changes as a slowly changing dimension, and
 -- fct_file_revisions exposes the validity intervals. Run at every dbt
--- build: a run without republication changes nothing. This directory
+-- build: a run without republication changes nothing. published_at is
+-- the upload date of the file version, read from its url, even when the
+-- knowledge axis was moved earlier by a documented exception. This directory
 -- stays outside sqlfluff: its jinja templater does not know the
 -- snapshot tag.
 
@@ -25,7 +27,7 @@ with courant as (
         delivery_kind,
         file_hash,
         url,
-        published_at,
+        url_published_at as published_at,
         lines_in_file,
         bytes,
         downloaded_at,

@@ -6,11 +6,12 @@ instead of hardcoding urls.
 """
 
 import re
+from datetime import UTC, date, datetime, timedelta
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from drm.config import DATASET_API
+from drm.config import DATASET_API, SLA_CAPTURE_DAYS
 
 ANNUAL_RE = re.compile(r"^deces-(\d{4})\.txt$")
 MONTHLY_RE = re.compile(r"^deces-(\d{4})-m(\d{2})\.txt$")
@@ -108,7 +109,33 @@ def _published_date(url: str) -> str | None:
     return None
 
 
-def probe_report(dataset: dict, entries: list[dict]) -> dict:
+def _pending(resource: dict, created_at: str | None, captured_titles: set[str]) -> dict:
+    """Dates of a delivery not yet captured, and when its capture clock started.
+
+    published_at is the upload date of the listed version, read from its
+    url. first_published_at is the creation date of the data.gouv resource,
+    which survives an in-place replacement of the file. For a period never
+    captured, the capture clock starts at that first publication - a
+    replacement must not reset it (incident of 2026-11-04). For a title
+    already captured, the clock starts with the new version; versions
+    published and replaced between two probes stay invisible.
+    """
+    published = _published_date(resource["url"])
+    first = created_at[:10] if created_at else None
+    never_captured = resource["title"] not in captured_titles
+    dates = [d for d in (published, first if never_captured else None) if d]
+    return {
+        **resource,
+        "published_at": published,
+        "first_published_at": first,
+        "pending_since": min(dates) if dates else None,
+        "replaced_before_capture": bool(
+            never_captured and first and published and first < published
+        ),
+    }
+
+
+def probe_report(dataset: dict, entries: list[dict], today: date | None = None) -> dict:
     """Compare the deliveries data.gouv lists with the capture manifest.
 
     The manifest is append-only and keeps one entry per captured version, so
@@ -119,11 +146,20 @@ def probe_report(dataset: dict, entries: list[dict]) -> dict:
     reported for the audit trail, never as a failure. A file published then
     retired between two probes would be invisible here - that risk is what
     the weekly cadence bounds (ADR-009).
+
+    The report also carries the capture SLA (docs/sla.md) - every delivery
+    pending for SLA_CAPTURE_DAYS days or more is a breach, which the
+    scheduled runs turn into a failed run and an incident issue.
     """
+    today = today or datetime.now(UTC).date()
     annual, monthly = _classify_resources(dataset)
     listed: list[dict] = list(annual.values())
     for year_resources in monthly.values():
         listed.extend(year_resources)
+    created = {
+        resource.get("url"): resource.get("created_at")
+        for resource in dataset.get("resources", [])
+    }
     register_entries = [
         entry
         for entry in entries
@@ -131,23 +167,29 @@ def probe_report(dataset: dict, entries: list[dict]) -> dict:
         or MONTHLY_RE.match(entry.get("title", ""))
     ]
     captured_urls = {entry.get("url") for entry in register_entries}
+    captured_titles = {entry["title"] for entry in register_entries}
     new_deliveries = sorted(
         (
-            {**resource, "published_at": _published_date(resource["url"])}
+            _pending(resource, created.get(resource["url"]), captured_titles)
             for resource in listed
             if resource["url"] not in captured_urls
         ),
         key=lambda resource: resource["title"],
     )
     listed_titles = {resource["title"] for resource in listed}
-    vanished_captured = sorted(
-        {entry["title"] for entry in register_entries} - listed_titles
-    )
+    vanished_captured = sorted(captured_titles - listed_titles)
+    limit = (today - timedelta(days=SLA_CAPTURE_DAYS)).isoformat()
     return {
         "resources_listed": len(listed),
         "captured_current": len(listed) - len(new_deliveries),
         "new_deliveries": new_deliveries,
         "vanished_captured": vanished_captured,
+        "sla_capture_days": SLA_CAPTURE_DAYS,
+        "sla_breaches": [
+            resource["title"]
+            for resource in new_deliveries
+            if resource["pending_since"] and resource["pending_since"] <= limit
+        ],
     }
 
 

@@ -263,10 +263,23 @@ def probe(
     typer.echo(f"captured: {report['captured_current']} already in the manifest")
     typer.echo(f"new:      {len(report['new_deliveries'])} to capture")
     for resource in report["new_deliveries"]:
-        typer.echo(f"  {resource['title']} (published {resource['published_at']})")
+        line = f"  {resource['title']} (published {resource['published_at']}"
+        if resource["pending_since"] != resource["published_at"]:
+            line += f", pending since {resource['pending_since']}"
+        typer.echo(line + ")")
+        if resource["replaced_before_capture"]:
+            typer.echo(
+                f"    first version of {resource['first_published_at']}"
+                " replaced before capture - knowledge date to check (runbook 01)"
+            )
     typer.echo(
         f"retired:  {len(report['vanished_captured'])} no longer listed, all captured"
     )
+    if report["sla_breaches"]:
+        typer.echo(
+            f"sla:      {len(report['sla_breaches'])} pending for"
+            f" {report['sla_capture_days']} days or more (docs/sla.md)"
+        )
     if report["new_deliveries"]:
         typer.echo("hint:     uv run drm backfill deaths --all-deliveries")
     if json_path is not None:

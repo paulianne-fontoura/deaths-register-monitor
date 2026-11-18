@@ -1,10 +1,13 @@
 -- Register deliveries of the manifest, one row per downloaded file. The
 -- upload date embedded in the versioned data.gouv url is the knowledge
 -- axis of the bitemporal marts (ADR-008): it says when the public could
--- know. COG referential entries are excluded here. is_base marks the
--- ADR-004 corpus (annual files, plus monthlies of years without one):
--- the quality measures read it, while fct_record_versions reads every
--- delivery and treats the overlaps as signal.
+-- know. A documented exception can move that date earlier, never later,
+-- when another delivery proves the content was public before the version
+-- was captured (connaissance_exceptions seed, incident of 2026-11-04).
+-- COG referential entries are excluded here. is_base marks the ADR-004
+-- corpus (annual files, plus monthlies of years without one): the quality
+-- measures read it, while fct_record_versions reads every delivery and
+-- treats the overlaps as signal.
 
 with source as (
 
@@ -20,7 +23,7 @@ renamed as (
         sha256 as file_hash,
         url,
         cast(strptime(regexp_extract(url, '/(\d{8})-\d{6}/', 1), '%Y%m%d') as date)
-            as published_at,
+            as url_published_at,
         lines as lines_in_file,
         bytes,
         cast(downloaded_at as timestamp) as downloaded_at,
@@ -31,6 +34,15 @@ renamed as (
         left(period, 4) as delivery_year
     from source
     where period not like 'cog%'
+
+),
+
+exceptions as (
+
+    select
+        file_hash,
+        connu_depuis
+    from {{ ref('connaissance_exceptions') }}
 
 ),
 
@@ -49,7 +61,11 @@ final as (
         renamed.title,
         renamed.file_hash,
         renamed.url,
-        renamed.published_at,
+        coalesce(exceptions.connu_depuis, renamed.url_published_at) as published_at,
+        renamed.url_published_at,
+        case
+            when exceptions.connu_depuis is null then 'url' else 'exception'
+        end as published_at_source,
         renamed.lines_in_file,
         renamed.bytes,
         renamed.downloaded_at,
@@ -59,6 +75,8 @@ final as (
     from renamed
     left join annees_annuelles
         on renamed.delivery_year = annees_annuelles.delivery_year
+    left join exceptions
+        on renamed.file_hash = exceptions.file_hash
 
 )
 

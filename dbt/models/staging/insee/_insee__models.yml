@@ -103,9 +103,22 @@ models:
       - name: url
         description: Versioned data.gouv url the file was fetched from.
       - name: published_at
-        description: Upload date embedded in the url.
+        description: >
+          Knowledge date of the delivery - the upload date embedded in the
+          url, or an earlier date documented in the connaissance_exceptions
+          seed when another delivery proves the content was already public.
         data_tests:
           - not_null
+      - name: url_published_at
+        description: Upload date embedded in the versioned url of the file.
+        data_tests:
+          - not_null
+      - name: published_at_source
+        description: url, or exception when the seed moved the date earlier.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['url', 'exception']
       - name: lines_in_file
         description: Line count recorded at download.
       - name: bytes

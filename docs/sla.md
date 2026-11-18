@@ -14,12 +14,24 @@ leur date de publication.
 
 ## 2 - Capture
 
-Toute livraison détectée est capturée localement sous trente jours après
-sa publication. Warn - l'issue `capture` reste ouverte tant que le
-manifest n'a pas rattrapé. Error - le contrôle SLA du run planifié échoue
-au-delà de trente jours et ouvre une issue `incident`. La marge est
-d'environ un ordre de grandeur - les retraits observés (mensuels effacés
-à la consolidation annuelle) se jouent à l'échelle de l'année.
+Toute livraison détectée est capturée localement sous sept jours après la
+première publication de sa période. Le compteur part de la création de la
+ressource data.gouv, que l'API expose et qu'un remplacement sur place ne
+modifie pas - un fichier remplacé avant capture ne remet donc pas le
+délai à zéro. Pour un titre déjà capturé puis republié, le compteur part
+de la nouvelle version. Warn - l'issue `capture` reste ouverte tant que le
+manifest n'a pas rattrapé, et signale une version initiale remplacée avant
+capture. Error - la sonde calcule les dépassements (`sla_breaches`), le run
+hebdomadaire et le run mensuel échouent dès le septième jour et ouvrent une
+issue `incident`.
+
+Ce délai était de trente jours jusqu'au 4 novembre 2026, sur l'hypothèse
+que les fichiers ne disparaissent qu'à la consolidation annuelle. Le
+mensuel de septembre 2026 a été remplacé onze jours après sa publication,
+et sa version initiale n'a jamais été capturée
+([post-mortem](postmortems/2026-11-04-capture-m09.md)). Sept jours laissent
+une sonde hebdomadaire au moins pour alerter avant un remplacement aussi
+rapide.
 
 ## 3 - Intégrité
 
@@ -47,7 +59,11 @@ testé par un échec volontaire le 30 septembre 2026 (étape 11).
 
 ## Limites connues
 
-La fenêtre aveugle de la sonde est de sept jours. Les crons GitHub d'un
-dépôt inactif soixante jours sont suspendus. La date de publication est
-extraite de l'url versionnée data.gouv - si ce format d'url change, la
-sonde le signale comme du neuf à capturer, jamais comme du connu.
+La fenêtre aveugle de la sonde est de sept jours. Un remplacement sur place
+plus rapide que la capture fait perdre la version initiale, le délai de
+sept jours réduit ce risque sans l'annuler. Les crons GitHub d'un dépôt
+inactif soixante jours sont suspendus. La date de version est extraite de
+l'url versionnée data.gouv - si ce format d'url change, la sonde le signale
+comme du neuf à capturer, jamais comme du connu. Si l'API cesse d'exposer
+la date de création de la ressource, le compteur retombe sur la date de
+l'url.

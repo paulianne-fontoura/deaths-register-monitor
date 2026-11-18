@@ -43,13 +43,13 @@ jobs:
 
       - name: Controle SLA de capture
         run: |
-          limit=$(date -d '30 days ago' +%F)
-          breaches=$(jq --arg limit "$limit" '[.new_deliveries[] | select(.published_at != null and .published_at < $limit)] | length' probe-report.json)
-          if [ "$breaches" != "0" ]; then
-            echo "SLA de capture depasse - $breaches livraison(s) en attente depuis plus de 30 jours (docs/sla.md, runbook 01)"
+          days=$(jq '.sla_capture_days' probe-report.json)
+          breaches=$(jq -r '.sla_breaches | join(", ")' probe-report.json)
+          if [ -n "$breaches" ]; then
+            echo "SLA de capture depasse - $breaches en attente depuis $days jours ou plus (docs/sla.md, runbook 01)"
             exit 1
           fi
-          echo "SLA de capture respecte"
+          echo "SLA de capture respecte ($days jours)"
 
       - name: Issue de capture
         if: always() && steps.probe.outputs.new_count != '' && steps.probe.outputs.new_count != '0'
@@ -58,7 +58,9 @@ jobs:
           {
             echo "La sonde a repere des livraisons non capturees sur data.gouv."
             echo
-            jq -r '.new_deliveries[] | "- \(.title) (publiee le \(.published_at))"' probe-report.json
+            jq -r '.new_deliveries[] | "- \(.title) (publiee le \(.published_at), en attente depuis le \(.pending_since))" + (if .replaced_before_capture then " - version initiale du \(.first_published_at) remplacee avant capture, date de connaissance a verifier (runbook 01)" else "" end)' probe-report.json
+            echo
+            echo "Delai de capture - $(jq '.sla_capture_days' probe-report.json) jours apres la premiere publication (docs/sla.md)."
             echo
             echo "Capture locale - uv run drm backfill deaths --all-deliveries, puis dbt build, puis commit du manifest."
             echo "Fermee automatiquement quand le manifest est a jour. Sonde - ${RUN_URL}"

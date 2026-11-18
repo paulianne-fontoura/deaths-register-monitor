@@ -51,6 +51,11 @@ qui motivent le projet.
 - Les fichiers sont republiés sans journal de modifications. Les corrections
   ne se voient qu'en comparant des livraisons couvrant la même période -
   c'est la mesure centrale du projet (design doc, section 4.3).
+- Un fichier peut être remplacé sur place, dans la même ressource
+  data.gouv et sous le même titre, quelques jours après sa publication. La
+  version initiale cesse alors d'être servie, et rien dans le jeu de
+  données ne le signale hormis le changement d'url. Observé sur le mensuel
+  de septembre 2026, remplacé onze jours après sa mise en ligne.
 - Les lignes portent des caractères non significatifs au-delà de la position
   176, conformes au NOTA du dessin d'enregistrement.
 - Les codes lieux suivent le Code officiel géographique de l'année de
@@ -67,6 +72,19 @@ qui motivent le projet.
   publiés au COG, documentés un à un dans la seed geo_exceptions. Les
   codes inconnus se concentrent presque tous entre 1970 et 1987 - la
   codification se stabilise avec l'informatisation du répertoire.
+
+## Versions publiées non capturées
+
+Journal des versions que data.gouv a servies et que la couche brute ne
+contient pas (runbook 01). Chaque entrée dit ce qui est perdu, ce qui ne
+l'est pas, et la date de connaissance retenue.
+
+| Fichier | Servi | Constat | Contenu | Date de connaissance |
+|---|---|---|---|---|
+| `deces-2026-m09.txt`, version initiale | du 5 au 16 octobre 2026 | 4 novembre 2026, remplacée sur place le 16 octobre avant capture, empreinte inconnue | Lignes de la version du 16 octobre toutes présentes, dans l'ordre, dans `deces-2026-t3.txt` publié le 5 octobre et jamais modifié | 5 octobre 2026, exception dans la seed `connaissance_exceptions` |
+
+Détail dans le
+[post-mortem du 4 novembre 2026](postmortems/2026-11-04-capture-m09.md).
 
 ## Ce que le fichier n'est pas
 

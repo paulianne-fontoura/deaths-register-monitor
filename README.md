@@ -127,7 +127,8 @@ Each check below runs at every capture and build. Numbers are from the real regi
 | Version diff in `fct_record_versions` | silent correction between monthly and annual file | 97,796 deaths |
 | Reconciliation with INSEE, 2.0% threshold | yearly total drifting from the official series | +0.4 to +1.6% since 1990 (scope effect), one hole in 1997 at -5.6%, about 30,000 deaths, kept as a documented exception |
 | Reconciliation with CépiDc, 2.5% threshold | same, against the cause-of-death counts | +1.6 to +1.8%, stable over 2019-2024 |
-| Republication snapshot | a file reissued under the same name | none observed yet, drill passed on a fabricated reissue |
+| Republication snapshot | a file reissued under the same name | none between two captured versions yet, drill passed on a fabricated reissue |
+| Knowledge-date exceptions (`connaissance_exceptions`) | a delivery replaced in place before capture | 1 - the September 2026 monthly, dated from its first publication on a quarterly witness |
 
 Thresholds are measured values versioned as dbt variables. Any breach fails
 the build - nothing is corrected silently.
@@ -136,19 +137,22 @@ the build - nothing is corrected silently.
 
 | Run | When | What it does |
 |---|---|---|
-| CI | every pull request | ruff, sqlfluff, 46 pytest tests, full dbt build on synthetic fixtures |
-| Weekly probe | Monday 06:23 UTC | lists the data.gouv deliveries, opens a `capture` issue for any URL not in the manifest |
+| CI | every pull request | ruff, sqlfluff, 49 pytest tests, full dbt build on synthetic fixtures |
+| Weekly probe | Monday 06:23 UTC | lists the data.gouv deliveries, opens a `capture` issue for any URL not in the manifest, fails on a capture SLA breach |
 | Monthly run | 5th, 06:17 UTC | probe, capture SLA check, dbt build on fixtures, static docs, artifacts kept 90 days |
 | Capture | on a `capture` issue, workstation | `drm backfill deaths --all-deliveries`, dbt build, `drm publish` |
 
 A failed scheduled run opens an `incident` issue with the run link and the
 runbook to follow, and the next green monthly run closes it. The alert path
-was tested with a deliberate failure.
+was tested with a deliberate failure, and the first real incident has a
+[post-mortem](docs/postmortems/2026-11-04-capture-m09.md) - a monthly file
+replaced in place eleven days after release, before capture, which cut the
+capture SLA from 30 to 7 days.
 
 | Commitment ([docs/sla.md](docs/sla.md)) | Target |
 |---|---|
 | Detection | any new delivery detected within 7 days |
-| Capture | captured on the workstation within 30 days of publication |
+| Capture | captured on the workstation within 7 days of the first publication of the period |
 | Integrity | nothing captured is ever modified or deleted, reloads insert zero rows |
 | Quality | build green, contracts included, or a visible failure |
 
@@ -226,13 +230,17 @@ The design document is [docs/design/000-design-doc.md](docs/design/000-design-do
 - Early years are partial - the 1970 file holds about 5% of that year's
   deaths.
 - Capture runs on one workstation by design. A missed capture is detected
-  and alerted, and a delivery deleted by data.gouv before capture is lost
-  for good - it cannot be rebuilt from a fresh clone.
+  and alerted, and a delivery deleted or replaced by data.gouv before
+  capture is lost for good - it cannot be rebuilt from a fresh clone. This
+  happened once, to the first version of the September 2026 monthly, whose
+  content survived in the quarterly file.
 - BigQuery sandbox tables expire after 60 days, so publishing is part of
   the monthly capture.
 
-Next - a post-mortem of the first real incident, the dbt documentation
-online once the repository is public, and a short video walkthrough.
+Next - capture the quarterly files as raw evidence, outside the counts, so
+that a knowledge-date exception no longer depends on data.gouv still serving
+the witness, then the dbt documentation online and a short video
+walkthrough.
 
 ## Data protection and licence
 

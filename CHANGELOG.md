@@ -68,8 +68,22 @@
 - MIT licence and a French summary at the top of the README, ahead of the
   repository going public as a reuse of the INSEE register on data.gouv.fr.
 - Pre-commit hook refusing absolute user paths in versioned files.
+- Knowledge-date exceptions (ADR-008, decision 7): the connaissance_exceptions
+  seed moves the knowledge date of a captured delivery earlier when a witness
+  delivery proves its content was already public; stg_insee__manifest exposes
+  url_published_at and published_at_source, two singular tests forbid a later
+  date and flag an exception matching no captured delivery. First exception -
+  the September 2026 monthly, dated 5 October from the t3 quarterly.
+- Post-mortem of the first real incident (docs/postmortems/2026-11-04-capture-m09.md)
+  and a register of published versions never captured (docs/le-registre.md).
 
 ### Fixed
+- The capture SLA could not fire on a file replaced in place before capture:
+  it counted from the date of the listed version, which a replacement resets.
+  drm probe now counts from the first publication of the period (data.gouv
+  resource creation date), from the new version for a reissue of a captured
+  title, reports sla_breaches and replaced_before_capture, and the weekly and
+  monthly runs fail on a breach. Capture SLA cut from 30 to 7 days.
 - A fresh clone could not rebuild the raw layer: the versioned manifest
   stores Windows paths, so already-captured deliveries were reported as
   present and then failed to parse. Manifest paths are now read portably,

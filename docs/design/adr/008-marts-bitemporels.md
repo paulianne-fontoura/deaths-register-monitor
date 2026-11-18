@@ -105,6 +105,33 @@ modèle choisit son corpus, aucune ligne n'est dupliquée ni supprimée.
 Le chargement passe par drm backfill deaths --all-deliveries ; les
 fichiers trimestriels restent exclus (ADR-004).
 
+## Décision 7 - exceptions documentées sur l'axe de connaissance
+
+Complément du 4 novembre 2026. La date d'url dit quand une version a été
+mise en ligne, pas toujours quand son contenu est devenu public. Le
+mensuel de septembre 2026 a été remplacé sur place onze jours après sa
+publication, avant capture. La seule version capturée porte une url du
+16 octobre, alors que toutes ses lignes figuraient dès le 5 octobre dans
+le trimestriel t3, jamais modifié depuis
+([post-mortem](../../postmortems/2026-11-04-capture-m09.md)).
+
+La seed `connaissance_exceptions` corrige ce cas sans toucher au manifest.
+Une ligne par livraison capturée (empreinte sha256), avec la date de
+connaissance retenue et la preuve. `stg_insee__manifest` expose la date
+retenue en `published_at`, la date d'url en `url_published_at` et l'origine
+en `published_at_source` (`url` ou `exception`). Tous les modèles de l'axe
+de connaissance lisent `published_at` et suivent sans modification. Le
+snapshot `snap_fichiers` garde la date d'url, puisqu'il historise des
+versions de fichiers.
+
+Deux garde-fous. Une exception ne peut qu'avancer une date, jamais la
+retarder (`assert_connaissance_exceptions_anterieures`, en erreur). Une
+exception sans livraison capturée correspondante est signalée
+(`assert_connaissance_exceptions_appliquees`, en avertissement, désactivé
+en CI où le manifest est une fixture). Une exception n'est admise qu'avec
+un témoin publié à la date retenue et jamais modifié depuis. Sans témoin,
+la date d'url reste la seule date démontrable.
+
 ## Conséquences
 
 fct_death_records repose sur trois intermédiaires - les clés d'ADR-007,

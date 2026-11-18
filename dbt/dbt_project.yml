@@ -61,6 +61,11 @@ seeds:
         champ: varchar
         statut: varchar
         exception_motif: varchar
+    connaissance_exceptions:
+      +column_types:
+        file_hash: varchar
+        connu_depuis: date
+        preuve: varchar
     reference_deces_cepidc:
       +column_types:
         annee: integer
